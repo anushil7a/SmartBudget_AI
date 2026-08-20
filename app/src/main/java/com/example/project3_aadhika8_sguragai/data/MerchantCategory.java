@@ -5,9 +5,13 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 /**
- * Entity for storing learned merchant-to-category mappings.
- * When a user corrects a category, we store the mapping so future expenses
- * from the same merchant auto-categorize correctly.
+ * An explicit user pin: "Trader Joe's is always GROCERIES".
+ *
+ * <p>This used to be written implicitly on every category correction, which left the app with
+ * two competing memories — this table and the classifier — that could disagree. It is now
+ * written only when the user deliberately chooses "always categorise this merchant as…".
+ * A pin short-circuits the model and reports full confidence; corrections go to the
+ * classifier instead, via unlearn/learn.
  */
 @Entity(tableName = "merchant_category")
 public class MerchantCategory {
