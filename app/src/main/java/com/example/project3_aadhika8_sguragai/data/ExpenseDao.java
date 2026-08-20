@@ -4,6 +4,9 @@ import androidx.room.Insert;
 import androidx.room.Update;
 import androidx.room.Delete;
 import androidx.room.Query;
+import androidx.room.RawQuery;
+import androidx.lifecycle.LiveData;
+import androidx.sqlite.db.SupportSQLiteQuery;
 
 import java.util.List;
 
@@ -46,6 +49,23 @@ public interface ExpenseDao {
     @Query("SELECT IFNULL(SUM(amount), 0) FROM expenses WHERE date BETWEEN :start AND :end")
     double getTotalForRange(String start, String end);
 
+    // --- Observable reads. The repository hands these straight to ViewModels; Room
+    // --- runs them on its own query executor, so nothing blocks the main thread.
+
+    @Query("SELECT * FROM expenses ORDER BY date DESC, id DESC")
+    LiveData<List<Expense>> observeAllExpenses();
+
+    @Query("SELECT * FROM expenses WHERE date BETWEEN :start AND :end ORDER BY date DESC, id DESC")
+    LiveData<List<Expense>> observeExpensesInRange(String start, String end);
+
+    @Query("SELECT * FROM expenses WHERE predictionConfidence IS NOT NULL "
+            + "AND predictionConfidence < :threshold ORDER BY date DESC, id DESC")
+    LiveData<List<Expense>> observeNeedsReview(float threshold);
+
+    @Query("SELECT IFNULL(SUM(amount), 0) FROM expenses WHERE date BETWEEN :start AND :end")
+    LiveData<Double> observeTotalForRange(String start, String end);
+
+    /** Plain-language search compiles to one of these. See SearchFilterSqlBuilder. */
+    @RawQuery
+    List<Expense> search(SupportSQLiteQuery query);
 }
-
-
