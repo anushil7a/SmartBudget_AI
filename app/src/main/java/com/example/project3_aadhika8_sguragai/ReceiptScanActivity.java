@@ -1,6 +1,8 @@
 package com.example.project3_aadhika8_sguragai;
 
 import com.example.project3_aadhika8_sguragai.data.*;
+import com.example.project3_aadhika8_sguragai.sense.capture.ReceiptExtraction;
+import com.example.project3_aadhika8_sguragai.sense.capture.ReceiptScanner;
 
 import android.Manifest;
 import android.app.DatePickerDialog;
@@ -56,7 +58,8 @@ public class ReceiptScanActivity extends AppCompatActivity {
     private TextInputEditText editNote;
     private MaterialButton buttonConfirm;
 
-    private OcrProcessor ocrProcessor;
+    private ReceiptScanner ocrProcessor;
+    private ReceiptExtraction lastExtraction;
     private AppDatabase db;
     private ExpenseDao expenseDao;
 
@@ -107,7 +110,7 @@ public class ReceiptScanActivity extends AppCompatActivity {
         setupClickListeners();
         setupCategoryDropdown();
 
-        ocrProcessor = new OcrProcessor();
+        ocrProcessor = new ReceiptScanner();
         selectedDate = Calendar.getInstance();
         updateDateButton();
     }
@@ -208,9 +211,9 @@ public class ReceiptScanActivity extends AppCompatActivity {
                 layoutPlaceholder.setVisibility(View.GONE);
 
                 // Process with OCR
-                ocrProcessor.processImage(currentBitmap, new OcrProcessor.OcrCallback() {
+                ocrProcessor.scan(currentBitmap, new ReceiptScanner.Callback() {
                     @Override
-                    public void onSuccess(OcrProcessor.OcrResult result) {
+                    public void onExtracted(ReceiptExtraction result) {
                         runOnUiThread(() -> {
                             showProcessing(false);
                             displayExtractedInfo(result);
@@ -218,11 +221,11 @@ public class ReceiptScanActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFailure(String error) {
+                    public void onError(Exception error) {
                         runOnUiThread(() -> {
                             showProcessing(false);
                             Toast.makeText(ReceiptScanActivity.this,
-                                    getString(R.string.error_ocr_failed) + ": " + error,
+                                    getString(R.string.error_ocr_failed) + ": " + error.getMessage(),
                                     Toast.LENGTH_LONG).show();
                             // Still show the card for manual entry
                             cardExtractedInfo.setVisibility(View.VISIBLE);
@@ -242,21 +245,22 @@ public class ReceiptScanActivity extends AppCompatActivity {
         buttonGallery.setEnabled(!show);
     }
 
-    private void displayExtractedInfo(OcrProcessor.OcrResult result) {
+    private void displayExtractedInfo(ReceiptExtraction result) {
         cardExtractedInfo.setVisibility(View.VISIBLE);
+        lastExtraction = result;
 
-        if (result.merchant != null && !result.merchant.isEmpty()) {
-            editMerchant.setText(result.merchant);
+        if (result.merchant.isPresent() && !result.merchant.value.isEmpty()) {
+            editMerchant.setText(result.merchant.value);
         }
 
-        if (result.amount != null) {
-            editAmount.setText(String.format(Locale.getDefault(), "%.2f", result.amount));
+        if (result.total.isPresent()) {
+            editAmount.setText(String.format(Locale.getDefault(), "%.2f", result.total.value));
         }
 
-        if (result.date != null) {
+        if (result.date.isPresent()) {
             try {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                Date date = sdf.parse(result.date);
+                Date date = sdf.parse(result.date.value);
                 if (date != null) {
                     selectedDate.setTime(date);
                     updateDateButton();
@@ -264,9 +268,8 @@ public class ReceiptScanActivity extends AppCompatActivity {
             } catch (Exception ignored) {}
         }
 
-        if (result.suggestedCategory != null) {
-            dropdownCategory.setText(formatCategoryName(result.suggestedCategory.name()), false);
-        }
+        // Category no longer comes from a keyword sweep inside the OCR class; the
+        // classifier supplies it. Wired up in Phase 3.
     }
 
     private void showDatePicker() {
