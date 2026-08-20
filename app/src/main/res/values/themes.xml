@@ -1,74 +1,152 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Project3_aadhika8_sguragai" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Primary brand color -->
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryDark">@color/primary_dark</item>
-        <item name="colorOnPrimary">@color/on_primary</item>
-        
-        <!-- Secondary brand color -->
-        <item name="colorSecondary">@color/secondary</item>
-        <item name="colorOnSecondary">@color/on_secondary</item>
-        
-        <!-- Surface colors -->
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/on_surface</item>
-        <item name="colorSurfaceVariant">@color/surface_variant</item>
-        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
-        
-        <!-- Background -->
-        <item name="android:colorBackground">@color/background</item>
-        <item name="colorOnBackground">@color/on_background</item>
-        
-        <!-- Error -->
-        <item name="colorError">@color/error</item>
-        <item name="colorOnError">@color/on_error</item>
-        
-        <!-- Status bar -->
-        <item name="android:statusBarColor">@color/primary_dark</item>
-        <item name="android:navigationBarColor">@color/surface</item>
+
+    <!--
+        getSense AI — dark only.
+
+        The parent is Theme.Material3.Dark.NoActionBar, a fixed dark parent rather than
+        DayNight, so the system light/dark setting cannot flip the app. android:forceDarkAllowed
+        is also false, which stops the platform's auto-dark pass re-tinting anything — note that
+        flag does not by itself force dark mode and is not what makes this theme dark; the
+        parent is.
+    -->
+    <style name="Base.Theme.GetSense" parent="Theme.Material3.Dark.NoActionBar">
+
+        <!-- The accent marks the primary metric and the active nav item. Nothing else. -->
+        <item name="colorPrimary">@color/sense_accent</item>
+        <item name="colorOnPrimary">@color/sense_on_accent</item>
+        <item name="colorPrimaryContainer">@color/sense_surface_raised</item>
+        <item name="colorOnPrimaryContainer">@color/sense_text_primary</item>
+
+        <item name="colorSecondary">@color/sense_positive</item>
+        <item name="colorOnSecondary">@color/sense_on_accent</item>
+
+        <item name="android:colorBackground">@color/sense_canvas</item>
+        <item name="colorOnBackground">@color/sense_text_primary</item>
+
+        <item name="colorSurface">@color/sense_surface</item>
+        <item name="colorOnSurface">@color/sense_text_primary</item>
+        <item name="colorSurfaceVariant">@color/sense_surface_raised</item>
+        <item name="colorOnSurfaceVariant">@color/sense_text_secondary</item>
+
+        <item name="colorError">@color/sense_alert</item>
+        <item name="colorOnError">@color/sense_canvas</item>
+
+        <item name="colorOutline">@color/sense_hairline</item>
+        <item name="colorOutlineVariant">@color/sense_hairline</item>
+
+        <!-- Roles Material 3 has no standard slot for. -->
+        <item name="senseHairline">@color/sense_hairline</item>
+        <item name="senseTextTertiary">@color/sense_text_tertiary</item>
+        <item name="sensePositive">@color/sense_positive</item>
+
+        <item name="android:statusBarColor">@color/sense_canvas</item>
+        <item name="android:navigationBarColor">@color/sense_canvas</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>
 
-    <style name="Theme.Project3_aadhika8_sguragai" parent="Base.Theme.Project3_aadhika8_sguragai" />
-    
-    <!-- Bottom Sheet Theme -->
+    <style name="Theme.GetSense" parent="Base.Theme.GetSense" />
+
+    <!--
+        Type. Space Grotesk for display numerals, Inter for everything else.
+
+        FONTS NOT YET BUNDLED: the two OFL families still need to be added to res/font/, which
+        is a file download awaiting approval. Until then these resolve to the platform sans
+        stack, which keeps the build green and every size, weight and spacing decision below
+        already correct; bundling the fonts is a one-line fontFamily change per style.
+    -->
+    <style name="TextAppearance.GetSense.DisplayAmount" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">44sp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <!-- Tabular figures, so digits do not jitter while the meter animates. -->
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <style name="TextAppearance.GetSense.Title" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="TextAppearance.GetSense.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <!--
+        The uppercase spaced label does most of the "instrument" work — every section header
+        and every metadata row uses it.
+    -->
+    <style name="TextAppearance.GetSense.Label" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- A 1dp rule replaces card chrome as the way sections are separated. -->
+    <style name="Widget.GetSense.Hairline" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">?attr/senseHairline</item>
+    </style>
+
+    <!--
+        MaterialCardView survives only for the receipt review sheet, where the surface is
+        genuinely liftable. Every other former card is now a hairline-separated section.
+    -->
+    <style name="Widget.GetSense.ReviewSheet" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
+        <item name="cardCornerRadius">20dp</item>
+        <item name="cardElevation">8dp</item>
+        <item name="contentPadding">20dp</item>
+    </style>
+
     <style name="ThemeOverlay.App.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/Widget.App.BottomSheet</item>
     </style>
-    
+
     <style name="Widget.App.BottomSheet" parent="Widget.Material3.BottomSheet">
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.App.LargeComponent</item>
+        <item name="backgroundTint">@color/sense_surface</item>
     </style>
-    
+
     <style name="ShapeAppearance.App.LargeComponent" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSizeTopLeft">24dp</item>
         <item name="cornerSizeTopRight">24dp</item>
     </style>
-    
-    <!-- Card Style -->
-    <style name="Widget.App.CardView" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardElevation">2dp</item>
+
+    <!--
+        Legacy widget styles, kept so the not-yet-rewritten screens keep compiling. They now
+        point at theme attributes rather than the old teal/amber literals.
+    -->
+    <style name="Widget.App.CardView" parent="Widget.Material3.CardView.Filled">
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="cardElevation">0dp</item>
         <item name="cardCornerRadius">16dp</item>
         <item name="contentPadding">16dp</item>
+        <item name="strokeColor">?attr/senseHairline</item>
+        <item name="strokeWidth">1dp</item>
     </style>
-    
-    <!-- Button Styles -->
+
     <style name="Widget.App.Button.Primary" parent="Widget.Material3.Button">
-        <item name="backgroundTint">@color/primary</item>
-        <item name="android:textColor">@color/on_primary</item>
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
         <item name="cornerRadius">12dp</item>
     </style>
-    
+
     <style name="Widget.App.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
-        <item name="strokeColor">@color/primary</item>
-        <item name="android:textColor">@color/primary</item>
+        <item name="strokeColor">?attr/senseHairline</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
         <item name="cornerRadius">12dp</item>
     </style>
-    
-    <!-- FAB Style -->
+
     <style name="Widget.App.FloatingActionButton" parent="Widget.Material3.FloatingActionButton.Primary">
-        <item name="backgroundTint">@color/secondary</item>
-        <item name="tint">@color/on_secondary</item>
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="tint">?attr/colorOnPrimary</item>
     </style>
 </resources>

@@ -1,61 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    getSense AI — dark instrument panel. One palette; there is no light theme, so there is no
+    values-night/ to override it.
+-->
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    
-    <!-- Primary Colors - Deep Teal -->
-    <color name="primary">#00796B</color>
-    <color name="primary_dark">#004D40</color>
-    <color name="primary_light">#48A999</color>
-    <color name="on_primary">#FFFFFF</color>
-    
-    <!-- Secondary Colors - Amber -->
-    <color name="secondary">#FFB300</color>
-    <color name="secondary_dark">#FF8F00</color>
-    <color name="secondary_light">#FFE54C</color>
-    <color name="on_secondary">#000000</color>
-    
-    <!-- Surface Colors -->
-    <color name="surface">#FFFFFF</color>
-    <color name="surface_variant">#F5F5F5</color>
-    <color name="on_surface">#1C1B1F</color>
-    <color name="on_surface_variant">#49454F</color>
-    
-    <!-- Background -->
-    <color name="background">#FAFAFA</color>
-    <color name="on_background">#1C1B1F</color>
-    
-    <!-- Error -->
-    <color name="error">#B3261E</color>
-    <color name="on_error">#FFFFFF</color>
-    <color name="error_container">#F9DEDC</color>
-    
-    <!-- Success -->
-    <color name="success">#2E7D32</color>
-    <color name="success_light">#4CAF50</color>
-    
-    <!-- Warning -->
-    <color name="warning">#F57C00</color>
-    <color name="warning_light">#FFB74D</color>
-    
-    <!-- Category Colors for Charts -->
-    <color name="category_food">#FF7043</color>
-    <color name="category_transport">#42A5F5</color>
-    <color name="category_entertainment">#AB47BC</color>
-    <color name="category_groceries">#66BB6A</color>
-    <color name="category_bills">#EF5350</color>
-    <color name="category_shopping">#EC407A</color>
-    <color name="category_other">#78909C</color>
-    
-    <!-- Card Colors -->
-    <color name="card_background">#FFFFFF</color>
-    <color name="card_stroke">#E0E0E0</color>
-    
-    <!-- Text Colors -->
-    <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
-    <color name="text_hint">#9E9E9E</color>
-    
-    <!-- Divider -->
-    <color name="divider">#E0E0E0</color>
+
+    <!-- Ground -->
+    <color name="sense_canvas">#0B0D0C</color>
+    <color name="sense_surface">#141816</color>
+    <color name="sense_surface_raised">#1C211E</color>
+    <color name="sense_hairline">#2A302C</color>
+
+    <!-- Type -->
+    <color name="sense_text_primary">#F2F5F1</color>
+    <color name="sense_text_secondary">#9AA39B</color>
+    <color name="sense_text_tertiary">#616B63</color>
+
+    <!-- The accent marks the primary metric and the active nav item. Nothing else. -->
+    <color name="sense_accent">#E8FF5A</color>
+    <color name="sense_on_accent">#0B0D0C</color>
+
+    <color name="sense_positive">#5AE8A0</color>
+    <color name="sense_alert">#FF6B4A</color>
+
+    <!--
+        Category palette, retuned for a dark ground. Each clears 4.5:1 against #0B0D0C as
+        text; elsewhere they are a 2dp bar or a dot marker.
+    -->
+    <color name="category_food">#FF8A5B</color>
+    <color name="category_transport">#5BA8FF</color>
+    <color name="category_entertainment">#C77DFF</color>
+    <color name="category_groceries">#5AE8A0</color>
+    <color name="category_bills">#FF6B8A</color>
+    <color name="category_shopping">#FFD166</color>
+    <color name="category_other">#7A8A80</color>
+
+    <!--
+        Compatibility aliases, pointing the old teal/amber names at the new tokens.
+
+        The legacy layouts still reference these by name; they are being rewritten screen by
+        screen in Phase 6, and each alias disappears as the last layout using it is replaced.
+        Keeping them means the existing screens render in the new palette immediately rather
+        than sitting broken until the rewrite lands. New layouts must use theme attributes
+        (?attr/colorPrimary, ?attr/senseHairline…), never these.
+    -->
+    <color name="primary">@color/sense_accent</color>
+    <color name="primary_dark">@color/sense_canvas</color>
+    <color name="primary_light">@color/sense_accent</color>
+    <color name="on_primary">@color/sense_on_accent</color>
+    <color name="secondary">@color/sense_positive</color>
+    <color name="secondary_light">@color/sense_positive</color>
+    <color name="on_secondary">@color/sense_on_accent</color>
+    <color name="surface">@color/sense_surface</color>
+    <color name="surface_variant">@color/sense_surface_raised</color>
+    <color name="on_surface">@color/sense_text_primary</color>
+    <color name="on_surface_variant">@color/sense_text_secondary</color>
+    <color name="background">@color/sense_canvas</color>
+    <color name="on_background">@color/sense_text_primary</color>
+    <color name="error">@color/sense_alert</color>
+    <color name="on_error">@color/sense_canvas</color>
+    <color name="success">@color/sense_positive</color>
+    <color name="warning">@color/sense_alert</color>
+    <color name="card_stroke">@color/sense_hairline</color>
+    <color name="divider">@color/sense_hairline</color>
+    <color name="text_primary">@color/sense_text_primary</color>
+    <color name="text_secondary">@color/sense_text_secondary</color>
+    <color name="text_hint">@color/sense_text_tertiary</color>
 </resources>

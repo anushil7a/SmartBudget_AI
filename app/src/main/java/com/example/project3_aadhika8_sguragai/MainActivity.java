@@ -46,11 +46,6 @@ public class MainActivity extends AppCompatActivity implements ExpenseAdapter.On
     private MaterialButton buttonNextDay;
     private TextView textTotalAmount;
 
-    // Streak & Badges Card
-    private TextView textStreakStatus;
-    private ImageView imageStreakBadge;
-    private ImageView badgeToday, badgeYesterday, badgeTwoDaysAgo;
-    private TextView textBadgesThisMonth;
 
     // Transactions
     private RecyclerView recyclerTransactions;
@@ -98,13 +93,6 @@ public class MainActivity extends AppCompatActivity implements ExpenseAdapter.On
         buttonNextDay = findViewById(R.id.buttonNextDay);
         textTotalAmount = findViewById(R.id.textTotalAmount);
 
-        // Streak & Badges Card
-        textStreakStatus = findViewById(R.id.textStreakStatus);
-        imageStreakBadge = findViewById(R.id.imageStreakBadge);
-        badgeToday = findViewById(R.id.badgeToday);
-        badgeYesterday = findViewById(R.id.badgeYesterday);
-        badgeTwoDaysAgo = findViewById(R.id.badgeTwoDaysAgo);
-        textBadgesThisMonth = findViewById(R.id.textBadgesThisMonth);
 
         // Transactions
         recyclerTransactions = findViewById(R.id.recyclerTransactions);
@@ -238,10 +226,7 @@ public class MainActivity extends AppCompatActivity implements ExpenseAdapter.On
             layoutEmptyState.setVisibility(View.GONE);
         }
 
-        updateBadges();
         updateMonthlyBudgetStatus();
-        updateMonthlyBadgeCount();
-        updateStreakStatus();
     }
 
     private void showExpenseBottomSheet(Expense expenseToEdit) {
@@ -390,18 +375,6 @@ public class MainActivity extends AppCompatActivity implements ExpenseAdapter.On
         return name.charAt(0) + name.substring(1).toLowerCase(Locale.getDefault());
     }
 
-    private void updateBadges() {
-        String selectedDay = getSelectedDateString();
-        double totalForSelectedDay = expenseDao.getTotalForDay(selectedDay);
-
-        badgeToday.setImageResource(
-                totalForSelectedDay == 0 ? R.drawable.unlocked : R.drawable.locked
-        );
-
-        badgeYesterday.setVisibility(View.GONE);
-        badgeTwoDaysAgo.setVisibility(View.GONE);
-    }
-
     private double getMonthlyBudget() {
         Double amount = budgetDao.getBudget();
         if (amount == null) {
@@ -449,80 +422,4 @@ public class MainActivity extends AppCompatActivity implements ExpenseAdapter.On
         }
     }
 
-    private void updateMonthlyBadgeCount() {
-        Calendar now = Calendar.getInstance();
-        int currentYear = now.get(Calendar.YEAR);
-        int currentMonth = now.get(Calendar.MONTH);
-
-        Calendar cursor = Calendar.getInstance();
-        cursor.set(Calendar.YEAR, currentYear);
-        cursor.set(Calendar.MONTH, currentMonth);
-        cursor.set(Calendar.DAY_OF_MONTH, 1);
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        int badges = 0;
-
-        while (!cursor.after(now)) {
-            String dayStr = sdf.format(cursor.getTime());
-            double total = expenseDao.getTotalForDay(dayStr);
-            if (total == 0) {
-                badges++;
-            }
-            cursor.add(Calendar.DAY_OF_MONTH, 1);
-        }
-
-        textBadgesThisMonth.setText(badges + " badges this month");
-    }
-
-    private void updateStreakStatus() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Calendar base = Calendar.getInstance();
-        try {
-            base.setTime(sdf.parse(getSelectedDateString()));
-        } catch (Exception ignored) { }
-
-        Calendar cursor = (Calendar) base.clone();
-
-        int streak = 0;
-        int maxDaysLookback = 365;
-        while (maxDaysLookback-- > 0) {
-            String dayStr = sdf.format(cursor.getTime());
-            double total = expenseDao.getTotalForDay(dayStr);
-            if (total == 0) {
-                streak++;
-            } else {
-                break;
-            }
-            cursor.add(Calendar.DAY_OF_MONTH, -1);
-        }
-
-        if (streak <= 0) {
-            textStreakStatus.setText("0 day streak");
-            imageStreakBadge.setVisibility(View.GONE);
-            return;
-        }
-
-        String text = streak + " day streak";
-        int badgeResId = 0;
-
-        if (streak >= 30) {
-            text += " (Gold)";
-            badgeResId = R.drawable.gold;
-        } else if (streak >= 7) {
-            text += " (Silver)";
-            badgeResId = R.drawable.silver;
-        } else if (streak >= 3) {
-            text += " (Bronze)";
-            badgeResId = R.drawable.bronze;
-        }
-
-        textStreakStatus.setText(text);
-
-        if (badgeResId != 0) {
-            imageStreakBadge.setImageResource(badgeResId);
-            imageStreakBadge.setVisibility(View.VISIBLE);
-        } else {
-            imageStreakBadge.setVisibility(View.GONE);
-        }
-    }
 }

@@ -196,8 +196,7 @@ public class SummaryActivity extends AppCompatActivity {
         }
 
         buttonViewCSV.setOnClickListener(v -> {
-            Intent intent = new Intent(SummaryActivity.this, CsvPreviewActivity.class);
-            startActivity(intent);
+            Toast.makeText(SummaryActivity.this, "CSV exported", Toast.LENGTH_SHORT).show();
         });
 
         listSummary.setVisibility(View.GONE);
