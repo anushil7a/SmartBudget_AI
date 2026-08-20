@@ -15,8 +15,21 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // OpenAI API key - set in local.properties as OPENAI_API_KEY=your_key
+        // OpenAI API key - set in local.properties as OPENAI_API_KEY=your_key.
+        // Known limitation: local.properties keeps the key out of version control, but a
+        // buildConfigField bakes it into the APK, where anyone who unpacks the build can
+        // recover it. Acceptable for coursework; a real release needs a server-side proxy.
         buildConfigField("String", "OPENAI_API_KEY", "\"${project.findProperty("OPENAI_API_KEY") ?: ""}\"")
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += mapOf("room.schemaLocation" to "$projectDir/schemas")
+            }
+        }
+    }
+
+    sourceSets {
+        getByName("androidTest").assets.srcDirs("$projectDir/schemas")
     }
 
     buildTypes {
@@ -64,8 +77,15 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.cardview)
     
+    // Lifecycle: ViewModels + LiveData, so no screen touches a DAO directly
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.lifecycle.livedata)
+    implementation(libs.lifecycle.runtime)
+
     testImplementation(libs.junit)
+    testImplementation(libs.core.testing)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.room.testing)
     annotationProcessor(libs.room.compiler)
 }
