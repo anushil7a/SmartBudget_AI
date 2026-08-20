@@ -1,9 +1,118 @@
 <resources>
-    <string name="app_name">project3_aadhika8_sguragai</string>
+    <string name="app_name">Budget Buddy</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_charts">Charts</string>
+    <string name="nav_chat">AI Chat</string>
+    <string name="nav_summary">Summary</string>
+    
+    <!-- Main Screen -->
+    <string name="total_spending">Total Spending</string>
+    <string name="monthly_budget">Monthly Budget</string>
+    <string name="remaining">Remaining</string>
+    <string name="recent_transactions">Recent Transactions</string>
+    <string name="no_transactions">No transactions for this day</string>
+    <string name="add_expense">Add Expense</string>
+    <string name="scan_receipt">Scan Receipt</string>
+    
+    <!-- Budget Status -->
+    <string name="budget_on_track">On Track</string>
+    <string name="budget_warning">Approaching Limit</string>
+    <string name="budget_exceeded">Over Budget</string>
+    
+    <!-- Expense Dialog -->
+    <string name="title_hint">Title</string>
+    <string name="amount_hint">Amount</string>
+    <string name="note_hint">Note (optional)</string>
+    <string name="select_date">Select Date</string>
+    <string name="select_category">Select Category</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="edit_expense">Edit Expense</string>
+    
+    <!-- Receipt Scanner -->
+    <string name="scan_receipt_title">Scan Receipt</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="choose_gallery">Choose from Gallery</string>
+    <string name="extracted_info">Extracted Information</string>
+    <string name="merchant">Merchant</string>
+    <string name="date">Date</string>
+    <string name="total">Total</string>
+    <string name="category">Category</string>
+    <string name="confirm_expense">Confirm Expense</string>
+    <string name="processing">Processing…</string>
+    
+    <!-- Charts -->
+    <string name="charts_title">Spending Charts</string>
+    <string name="pie_chart">By Category</string>
+    <string name="bar_chart">Daily</string>
+    <string name="trend_chart">Trends</string>
+    <string name="this_week">This Week</string>
+    <string name="this_month">This Month</string>
+    <string name="this_year">This Year</string>
+    
+    <!-- AI Chat -->
+    <string name="chat_title">Financial Assistant</string>
+    <string name="chat_placeholder">Ask about your spending…</string>
+    <string name="chat_welcome">Hi! I\'m your financial assistant. Ask me anything about your spending habits, budget tips, or expense analysis.</string>
+    <string name="send">Send</string>
+    
+    <!-- Summary -->
+    <string name="summary_title">Summary</string>
+    <string name="set_budget">Set Budget</string>
+    <string name="show_summary">Show Summary</string>
+    <string name="show_expenses">Show All Expenses</string>
+    <string name="export_csv">Export to CSV</string>
+    <string name="view_csv">View CSV</string>
+    <string name="search_hint">Search expenses…</string>
+    <string name="natural_search_hint">Try: \"food last week\" or \"over $50\"</string>
+    
+    <!-- Categories -->
+    <string name="category_food">Food</string>
+    <string name="category_transport">Transport</string>
+    <string name="category_entertainment">Entertainment</string>
+    <string name="category_groceries">Groceries</string>
+    <string name="category_bills">Bills</string>
+    <string name="category_shopping">Shopping</string>
+    <string name="category_other">Other</string>
+    
+    <!-- Badges -->
+    <string name="no_spend_badge">No-Spend Badge</string>
+    <string name="streak_days">%d day streak</string>
+    <string name="badges_this_month">Badges this month: %d</string>
+    
+    <!-- Date Presets -->
+    <string name="preset_week">Week</string>
+    <string name="preset_month">Month</string>
+    <string name="preset_year">Year</string>
+    <string name="preset_all">All Time</string>
+    
+    <!-- Sort Options -->
     <string-array name="sort_options">
         <item>Date (Newest First)</item>
         <item>Amount (High to Low)</item>
         <item>Amount (Low to High)</item>
         <item>Category</item>
     </string-array>
+    
+    <!-- Errors -->
+    <string name="error_title_required">Title is required</string>
+    <string name="error_amount_required">Amount is required</string>
+    <string name="error_invalid_amount">Invalid amount</string>
+    <string name="error_ocr_failed">Could not read receipt</string>
+    <string name="error_network">Network error. Please try again.</string>
+    
+    <!-- Success Messages -->
+    <string name="expense_added">Expense added</string>
+    <string name="expense_updated">Expense updated</string>
+    <string name="expense_deleted">Expense deleted</string>
+    <string name="budget_updated">Budget updated</string>
+    
+    <!-- Remember Category -->
+    <string name="remember_category_title">Remember this category?</string>
+    <string name="remember_category_message">Use %s for future \"%s\" expenses?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
 </resources>

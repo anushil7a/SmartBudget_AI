@@ -14,6 +14,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // OpenAI API key - set in local.properties as OPENAI_API_KEY=your_key
+        buildConfigField("String", "OPENAI_API_KEY", "\"${project.findProperty("OPENAI_API_KEY") ?: ""}\"")
     }
 
     buildTypes {
@@ -24,6 +27,9 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+    buildFeatures {
+        buildConfig = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -39,6 +45,25 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.room.common.jvm)
     implementation(libs.room.runtime)
+    
+    // Charts
+    implementation(libs.mpandroidchart)
+    
+    // ML Kit OCR
+    implementation(libs.mlkit.text.recognition)
+    
+    // HTTP Client for OpenAI
+    implementation(libs.okhttp)
+    
+    // Image loading
+    implementation(libs.glide)
+    
+    // UI Components
+    implementation(libs.viewpager2)
+    implementation(libs.fragment)
+    implementation(libs.recyclerview)
+    implementation(libs.cardview)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

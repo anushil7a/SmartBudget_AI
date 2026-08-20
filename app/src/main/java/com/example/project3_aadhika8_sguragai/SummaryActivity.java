@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -17,6 +16,9 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButton;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -31,25 +33,25 @@ public class SummaryActivity extends AppCompatActivity {
     private AppDatabase db;
     private ExpenseDao expenseDao;
 
-    private Button buttonBack;
-    private Button buttonFromDate;
-    private Button buttonToDate;
-    private Button buttonPresetWeek;
-    private Button buttonPresetMonth;
-    private Button buttonPresetYear;
-    private Button buttonPresetAllTime;
-    private Button buttonShowSummary;
-    private Button buttonShowExpenses;
-    private Button buttonExportCSV;
-    private Button buttonViewCSV;
+    private MaterialButton buttonBack;
+    private MaterialButton buttonFromDate;
+    private MaterialButton buttonToDate;
+    private MaterialButton buttonPresetWeek;
+    private MaterialButton buttonPresetMonth;
+    private MaterialButton buttonPresetYear;
+    private MaterialButton buttonPresetAllTime;
+    private MaterialButton buttonShowSummary;
+    private MaterialButton buttonShowExpenses;
+    private MaterialButton buttonExportCSV;
+    private MaterialButton buttonViewCSV;
     private TextView textTotalRange;
     private TextView textRemainingBudget;
     private TextView textHighestCategory;
     private LinearLayout layoutSearch;
     private EditText editSearch;
-    private Button buttonSearch;
+    private MaterialButton buttonSearch;
     private EditText editMonthlyBudget;
-    private Button buttonSetBudget;
+    private MaterialButton buttonSetBudget;
 
     private ListView listSummary;
     private ListView listExpenses;
@@ -72,6 +74,11 @@ public class SummaryActivity extends AppCompatActivity {
     private boolean isSummaryVisible = false;
     private boolean isExpensesVisible = false;
 
+    private BottomNavigationView bottomNavigation;
+    private NaturalLanguageParser nlParser;
+    private OpenAIService openAIService;
+    private TextView textSearchResult;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +87,8 @@ public class SummaryActivity extends AppCompatActivity {
         db = AppDatabase.getInstance(getApplicationContext());
         expenseDao = db.expenseDao();
         budgetDao = db.budgetDao();
+        nlParser = new NaturalLanguageParser();
+        openAIService = new OpenAIService(BuildConfig.OPENAI_API_KEY);
 
         buttonBack = findViewById(R.id.buttonBack);
         buttonFromDate = findViewById(R.id.buttonFromDate);
@@ -107,6 +116,9 @@ public class SummaryActivity extends AppCompatActivity {
         textRemainingBudget = findViewById(R.id.textRemainingBudget);
         textHighestCategory = findViewById(R.id.textHighestCategory);
 
+        bottomNavigation = findViewById(R.id.bottomNavigation);
+        setupBottomNavigation();
+
         spinnerSort = findViewById(R.id.spinnerSort);
         spinnerSort.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -128,13 +140,10 @@ public class SummaryActivity extends AppCompatActivity {
             String start = getFromDateString();
             String end = getToDateString();
 
-            android.content.Intent intent =
-                    new android.content.Intent(SummaryActivity.this, CategoryExpensesActivity.class);
-
+            Intent intent = new Intent(SummaryActivity.this, CategoryExpensesActivity.class);
             intent.putExtra(CategoryExpensesActivity.EXTRA_CATEGORY, selectedCat.name());
             intent.putExtra(CategoryExpensesActivity.EXTRA_START_DATE, start);
             intent.putExtra(CategoryExpensesActivity.EXTRA_END_DATE, end);
-
             startActivity(intent);
         });
 
@@ -148,7 +157,7 @@ public class SummaryActivity extends AppCompatActivity {
             try {
                 double budget = Double.parseDouble(input);
                 saveMonthlyBudget(budget);
-                Toast.makeText(SummaryActivity.this, "Monthly budget set to $" + String.format(Locale.getDefault(), "%.2f", budget), Toast.LENGTH_SHORT).show();
+                Toast.makeText(SummaryActivity.this, R.string.budget_updated, Toast.LENGTH_SHORT).show();
                 updateBudgetWarning();
             } catch (NumberFormatException e) {
                 Toast.makeText(SummaryActivity.this, "Invalid number format", Toast.LENGTH_SHORT).show();
@@ -168,40 +177,55 @@ public class SummaryActivity extends AppCompatActivity {
         buttonFromDate.setOnClickListener(v -> showDatePicker(true));
         buttonToDate.setOnClickListener(v -> showDatePicker(false));
 
-        buttonPresetWeek.setOnClickListener(v -> {
-            setWeekPreset();
-        });
-
-        buttonPresetMonth.setOnClickListener(v -> {
-            setMonthPreset();
-        });
-
-        buttonPresetYear.setOnClickListener(v -> {
-            setYearPreset();
-        });
-
-        buttonPresetAllTime.setOnClickListener(v -> {
-            setAllTimePreset();
-        });
+        buttonPresetWeek.setOnClickListener(v -> setWeekPreset());
+        buttonPresetMonth.setOnClickListener(v -> setMonthPreset());
+        buttonPresetYear.setOnClickListener(v -> setYearPreset());
+        buttonPresetAllTime.setOnClickListener(v -> setAllTimePreset());
 
         buttonShowSummary.setOnClickListener(v -> toggleSummary());
-
         buttonShowExpenses.setOnClickListener(v -> toggleExpenses());
-
-        buttonSearch.setOnClickListener(v -> applySearchFilter());
-
+        buttonSearch.setOnClickListener(v -> applyNaturalLanguageSearch());
         buttonExportCSV.setOnClickListener(v -> exportCSV());
 
-        buttonBack.setOnClickListener(v -> finish());
+        if (buttonBack != null) {
+            buttonBack.setOnClickListener(v -> finish());
+        }
 
         buttonViewCSV.setOnClickListener(v -> {
             Intent intent = new Intent(SummaryActivity.this, CsvPreviewActivity.class);
             startActivity(intent);
         });
 
-        listSummary.setVisibility(android.view.View.GONE);
-        listExpenses.setVisibility(android.view.View.GONE);
-        layoutSearch.setVisibility(android.view.View.GONE);
+        listSummary.setVisibility(View.GONE);
+        listExpenses.setVisibility(View.GONE);
+    }
+
+    private void setupBottomNavigation() {
+        bottomNavigation.setSelectedItemId(R.id.nav_summary);
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
+                return true;
+            } else if (id == R.id.nav_charts) {
+                startActivity(new Intent(this, ChartsActivity.class));
+                return true;
+            } else if (id == R.id.nav_chat) {
+                startActivity(new Intent(this, ChatActivity.class));
+                return true;
+            } else if (id == R.id.nav_summary) {
+                return true;
+            }
+            return false;
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        bottomNavigation.setSelectedItemId(R.id.nav_summary);
+        updateBudgetWarning();
     }
 
 
@@ -298,14 +322,15 @@ public class SummaryActivity extends AppCompatActivity {
         String end = getToDateString();
 
         if (start.compareTo(end) > 0) {
-            textTotalRange.setText("Total spent for the selected dates: $0.00");
+            textTotalRange.setText("Total: $0.00");
             return;
         }
 
         double total = expenseDao.getTotalForRange(start, end);
-        String text = "Total spent for the selected dates: $" +
-                String.format(Locale.getDefault(), "%.2f", total);
-        textTotalRange.setText(text);
+        textTotalRange.setText(String.format(Locale.getDefault(), "Total: $%.2f", total));
+        
+        // Update highest category
+        updateHighestCategory(start, end);
     }
 
 
@@ -415,6 +440,147 @@ public class SummaryActivity extends AppCompatActivity {
         listExpenses.setAdapter(expensesAdapter);
     }
 
+    private void applyNaturalLanguageSearch() {
+        String queryText = editSearch.getText().toString().trim();
+        if (queryText.isEmpty()) {
+            loadExpensesForCurrentRange();
+            return;
+        }
+
+        // Check if OpenAI is available
+        if (openAIService.hasApiKey()) {
+            // Use AI-powered search
+            performAISearch(queryText);
+        } else {
+            // Fall back to local parsing
+            performLocalSearch(queryText);
+        }
+    }
+
+    private void performAISearch(String queryText) {
+        // Show loading
+        Toast.makeText(this, "Searching with AI...", Toast.LENGTH_SHORT).show();
+        buttonSearch.setEnabled(false);
+
+        // Build expense data for AI
+        String expenseData = buildExpenseDataForSearch();
+
+        openAIService.searchExpenses(queryText, expenseData, new OpenAIService.ChatCallback() {
+            @Override
+            public void onSuccess(String response) {
+                runOnUiThread(() -> {
+                    buttonSearch.setEnabled(true);
+                    
+                    // Show AI response in a dialog
+                    new android.app.AlertDialog.Builder(SummaryActivity.this)
+                            .setTitle("Search Results")
+                            .setMessage(response)
+                            .setPositiveButton("OK", null)
+                            .show();
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    buttonSearch.setEnabled(true);
+                    // Fall back to local search
+                    performLocalSearch(queryText);
+                });
+            }
+        });
+    }
+
+    private String buildExpenseDataForSearch() {
+        StringBuilder data = new StringBuilder();
+        
+        // Get all expenses
+        List<Expense> allExpenses = expenseDao.getAllExpenses();
+        
+        if (allExpenses != null && !allExpenses.isEmpty()) {
+            // Sort by date (newest first)
+            allExpenses.sort((a, b) -> b.date.compareTo(a.date));
+            
+            for (Expense e : allExpenses) {
+                String catName = e.category != null ? e.category.name() : "OTHER";
+                String note = (e.note != null && !e.note.isEmpty()) ? " [" + e.note + "]" : "";
+                data.append(String.format(Locale.getDefault(),
+                        "%s: %s - $%.2f (%s)%s\n",
+                        e.date, e.title, e.amount, catName, note));
+            }
+        }
+        
+        return data.toString();
+    }
+
+    private void performLocalSearch(String queryText) {
+        // Parse the natural language query
+        NaturalLanguageParser.SearchQuery searchQuery = nlParser.parse(queryText);
+
+        // Determine date range
+        String start = searchQuery.startDate != null ? searchQuery.startDate : getFromDateString();
+        String end = searchQuery.endDate != null ? searchQuery.endDate : getToDateString();
+
+        // Get all expenses in range
+        List<Expense> allExpenses = expenseDao.getExpensesInRange(start, end);
+
+        ArrayList<String> filtered = new ArrayList<>();
+
+        for (Expense e : allExpenses) {
+            boolean matches = true;
+
+            // Category filter
+            if (searchQuery.category != null && e.category != searchQuery.category) {
+                matches = false;
+            }
+
+            // Min amount filter
+            if (searchQuery.minAmount != null && e.amount < searchQuery.minAmount) {
+                matches = false;
+            }
+
+            // Max amount filter
+            if (searchQuery.maxAmount != null && e.amount > searchQuery.maxAmount) {
+                matches = false;
+            }
+
+            // Keyword filter
+            if (searchQuery.keyword != null && !searchQuery.keyword.isEmpty()) {
+                String title = e.title == null ? "" : e.title.toLowerCase();
+                String note = e.note == null ? "" : e.note.toLowerCase();
+                if (!title.contains(searchQuery.keyword) && !note.contains(searchQuery.keyword)) {
+                    matches = false;
+                }
+            }
+
+            if (matches) {
+                String title = e.title == null ? "" : e.title;
+                String catName = e.category == null ? "" : e.category.name();
+                String line = e.date + " - " + title + " - $" +
+                        String.format(Locale.getDefault(), "%.2f", e.amount) +
+                        " (" + catName + ")";
+                filtered.add(line);
+            }
+        }
+
+        // Show results
+        if (!isExpensesVisible) {
+            listExpenses.setVisibility(View.VISIBLE);
+            spinnerSort.setVisibility(View.VISIBLE);
+            isExpensesVisible = true;
+        }
+
+        expensesAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_list_item_1,
+                filtered
+        );
+        listExpenses.setAdapter(expensesAdapter);
+
+        // Show result count
+        Toast.makeText(this, "Found " + filtered.size() + " expenses", Toast.LENGTH_SHORT).show();
+    }
+
 
     private void exportCSV() {
         try {
@@ -483,14 +649,15 @@ public class SummaryActivity extends AppCompatActivity {
         double totalThisMonth = expenseDao.getTotalForRange(monthStart, monthEnd);
         double remaining = budget - totalThisMonth;
 
-        textRemainingBudget.setText("Remaining Budget: $" + String.format(Locale.getDefault(), "%.2f", remaining));
+        textRemainingBudget.setText(String.format(Locale.getDefault(), "Remaining: $%.2f", Math.max(0, remaining)));
+        textRemainingBudget.setVisibility(View.VISIBLE);
 
         if (totalThisMonth > budget) {
-            textRemainingBudget.setTextColor(Color.RED);
+            textRemainingBudget.setTextColor(getColor(R.color.error));
         } else if (remaining <= 200) {
-            textRemainingBudget.setTextColor(Color.parseColor("#FFA500"));
+            textRemainingBudget.setTextColor(getColor(R.color.warning));
         } else {
-            textRemainingBudget.setTextColor(Color.BLACK);
+            textRemainingBudget.setTextColor(getColor(R.color.on_primary));
         }
     }
 

@@ -1,5 +1,8 @@
 package com.example.project3_aadhika8_sguragai;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -7,94 +10,124 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Spinner;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputEditText;
+
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-import android.content.DialogInterface;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ExpenseAdapter.OnExpenseClickListener {
 
-    private TextView textTotalAmount;
+    // Budget Overview Card
     private TextView textMonthlyBudgetHome;
+    private TextView textSpent;
+    private TextView textRemaining;
+    private LinearProgressIndicator progressBudget;
     private TextView textBudgetWarningHome;
-    private TextView textBadgesThisMonth;
-    private TextView textStreakStatus;
-    private Button buttonSelectDate;
-    private Button buttonViewSummary;
-    private Button buttonAddExpense;
-    private ListView listTransactions;
 
+    // Daily Summary Card
+    private MaterialButton buttonSelectDate;
+    private MaterialButton buttonPrevDay;
+    private MaterialButton buttonNextDay;
+    private TextView textTotalAmount;
+
+    // Streak & Badges Card
+    private TextView textStreakStatus;
+    private ImageView imageStreakBadge;
+    private ImageView badgeToday, badgeYesterday, badgeTwoDaysAgo;
+    private TextView textBadgesThisMonth;
+
+    // Transactions
+    private RecyclerView recyclerTransactions;
+    private LinearLayout layoutEmptyState;
+    private ExpenseAdapter expenseAdapter;
+
+    // Navigation
+    private FloatingActionButton fabAdd;
+    private BottomNavigationView bottomNavigation;
+
+    // Data
     private Calendar calendar;
     private AppDatabase db;
     private ExpenseDao expenseDao;
     private BudgetDao budgetDao;
-
-    private ArrayList<String> transactionStrings;
-    private ArrayAdapter<String> adapter;
     private List<Expense> expenses;
-    private Button buttonPrevDay;
-    private Button buttonNextDay;
-
-    private ImageView badgeToday, badgeYesterday, badgeTwoDaysAgo;
-    private ImageView imageStreakBadge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textTotalAmount = findViewById(R.id.textTotalAmount);
+        initViews();
+        initDatabase();
+        setupRecyclerView();
+        setupClickListeners();
+        setupBottomNavigation();
+
+        calendar = Calendar.getInstance();
+        updateDateButtonText();
+        loadDataForSelectedDate();
+    }
+
+    private void initViews() {
+        // Budget Overview Card
         textMonthlyBudgetHome = findViewById(R.id.textMonthlyBudgetHome);
+        textSpent = findViewById(R.id.textSpent);
+        textRemaining = findViewById(R.id.textRemaining);
+        progressBudget = findViewById(R.id.progressBudget);
         textBudgetWarningHome = findViewById(R.id.textBudgetWarningHome);
-        textBadgesThisMonth = findViewById(R.id.textBadgesThisMonth);
-        textStreakStatus = findViewById(R.id.textStreakStatus);
+
+        // Daily Summary Card
         buttonSelectDate = findViewById(R.id.buttonSelectDate);
-        buttonViewSummary = findViewById(R.id.buttonViewSummary);
-        buttonAddExpense = findViewById(R.id.buttonAddExpense);
-        listTransactions = findViewById(R.id.listTransactions);
         buttonPrevDay = findViewById(R.id.buttonPrevDay);
         buttonNextDay = findViewById(R.id.buttonNextDay);
+        textTotalAmount = findViewById(R.id.textTotalAmount);
+
+        // Streak & Badges Card
+        textStreakStatus = findViewById(R.id.textStreakStatus);
+        imageStreakBadge = findViewById(R.id.imageStreakBadge);
         badgeToday = findViewById(R.id.badgeToday);
         badgeYesterday = findViewById(R.id.badgeYesterday);
         badgeTwoDaysAgo = findViewById(R.id.badgeTwoDaysAgo);
-        imageStreakBadge = findViewById(R.id.imageStreakBadge);
+        textBadgesThisMonth = findViewById(R.id.textBadgesThisMonth);
 
+        // Transactions
+        recyclerTransactions = findViewById(R.id.recyclerTransactions);
+        layoutEmptyState = findViewById(R.id.layoutEmptyState);
 
-        listTransactions.setOnItemClickListener((parent, view, position, id) -> {
-            if (expenses == null || position < 0 || position >= expenses.size()) {
-                return;
-            }
-            Expense selected = expenses.get(position);
-            showExpensePopup(selected);  
-        });
+        // Navigation
+        fabAdd = findViewById(R.id.fabAdd);
+        bottomNavigation = findViewById(R.id.bottomNavigation);
+    }
 
-        calendar = Calendar.getInstance();
-
+    private void initDatabase() {
         db = AppDatabase.getInstance(getApplicationContext());
         expenseDao = db.expenseDao();
         budgetDao = db.budgetDao();
+    }
 
-        updateDateButtonText();
-        loadDataForSelectedDate();
+    private void setupRecyclerView() {
+        expenseAdapter = new ExpenseAdapter(this);
+        recyclerTransactions.setLayoutManager(new LinearLayoutManager(this));
+        recyclerTransactions.setAdapter(expenseAdapter);
+    }
 
+    private void setupClickListeners() {
         buttonSelectDate.setOnClickListener(v -> showDatePicker());
 
-        buttonViewSummary.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, SummaryActivity.class);
-            startActivity(intent);
-        });
         buttonPrevDay.setOnClickListener(v -> {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
             updateDateButtonText();
@@ -107,17 +140,53 @@ public class MainActivity extends AppCompatActivity {
             loadDataForSelectedDate();
         });
 
+        fabAdd.setOnClickListener(v -> showAddExpenseOptions());
+    }
 
-
-
-        buttonAddExpense.setOnClickListener(v -> showExpensePopup(null));
+    private void setupBottomNavigation() {
+        bottomNavigation.setSelectedItemId(R.id.nav_home);
+        bottomNavigation.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_home) {
+                return true;
+            } else if (id == R.id.nav_charts) {
+                startActivity(new Intent(this, ChartsActivity.class));
+                return true;
+            } else if (id == R.id.nav_chat) {
+                startActivity(new Intent(this, ChatActivity.class));
+                return true;
+            } else if (id == R.id.nav_summary) {
+                startActivity(new Intent(this, SummaryActivity.class));
+                return true;
+            }
+            return false;
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Reload data (including monthly budget) when returning from other screens
+        bottomNavigation.setSelectedItemId(R.id.nav_home);
         loadDataForSelectedDate();
+    }
+
+    @Override
+    public void onExpenseClick(Expense expense) {
+        showExpenseBottomSheet(expense);
+    }
+
+    private void showAddExpenseOptions() {
+        String[] options = {"Add Manually", "Scan Receipt"};
+        new AlertDialog.Builder(this)
+                .setTitle("Add Expense")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        showExpenseBottomSheet(null);
+                    } else {
+                        startActivity(new Intent(this, ReceiptScanActivity.class));
+                    }
+                })
+                .show();
     }
 
     private void showDatePicker() {
@@ -127,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
         DatePickerDialog dialog = new DatePickerDialog(
                 this,
-                (DatePicker view, int year, int month, int dayOfMonth) -> {
+                (view, year, month, dayOfMonth) -> {
                     calendar.set(year, month, dayOfMonth);
                     updateDateButtonText();
                     loadDataForSelectedDate();
@@ -150,111 +219,143 @@ public class MainActivity extends AppCompatActivity {
     private void loadDataForSelectedDate() {
         String day = getSelectedDateString();
 
+        // Daily total
         double total = expenseDao.getTotalForDay(day);
         textTotalAmount.setText(String.format(Locale.getDefault(), "$%.2f", total));
 
-        expenses = expenseDao.getExpensesForDay(day);   
+        // Load expenses for RecyclerView
+        expenses = expenseDao.getExpensesForDay(day);
+        expenseAdapter.setExpenses(expenses);
 
-        transactionStrings = new ArrayList<>();
-
-        for (Expense e : expenses) {
-            String line = e.title + " - $" +
-                    String.format(Locale.getDefault(), "%.2f", e.amount) +
-                    " (" + e.category.name() + ")";
-
-            transactionStrings.add(line);
+        // Toggle empty state
+        if (expenses == null || expenses.isEmpty()) {
+            recyclerTransactions.setVisibility(View.GONE);
+            layoutEmptyState.setVisibility(View.VISIBLE);
+        } else {
+            recyclerTransactions.setVisibility(View.VISIBLE);
+            layoutEmptyState.setVisibility(View.GONE);
         }
 
-        adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_list_item_1,
-                transactionStrings
-        );
-        listTransactions.setAdapter(adapter);
         updateBadges();
         updateMonthlyBudgetStatus();
         updateMonthlyBadgeCount();
         updateStreakStatus();
     }
 
+    private void showExpenseBottomSheet(Expense expenseToEdit) {
+        BottomSheetDialog bottomSheet = new BottomSheetDialog(this, R.style.ThemeOverlay_App_BottomSheetDialog);
+        View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_expense, null);
+        bottomSheet.setContentView(sheetView);
 
-    private void showExpensePopup(Expense expenseToEdit) {
+        // Get views
+        TextView textSheetTitle = sheetView.findViewById(R.id.textSheetTitle);
+        TextInputEditText editTitle = sheetView.findViewById(R.id.editTitle);
+        TextInputEditText editAmount = sheetView.findViewById(R.id.editAmount);
+        MaterialButton buttonDate = sheetView.findViewById(R.id.buttonDate);
+        MaterialAutoCompleteTextView dropdownCategory = sheetView.findViewById(R.id.dropdownCategory);
+        TextInputEditText editNote = sheetView.findViewById(R.id.editNote);
+        MaterialButton buttonDelete = sheetView.findViewById(R.id.buttonDelete);
+        MaterialButton buttonCancel = sheetView.findViewById(R.id.buttonCancel);
+        MaterialButton buttonSave = sheetView.findViewById(R.id.buttonSave);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setTitle(expenseToEdit == null ? "Add Expense" : "Edit Expense");
-
-        View view = getLayoutInflater().inflate(R.layout.dialog_add_edit_expense, null);
-        builder.setView(view);
-
-        EditText dialogTitle = view.findViewById(R.id.dialogTitle);
-        EditText dialogAmount = view.findViewById(R.id.dialogAmount);
-        EditText dialogNote = view.findViewById(R.id.dialogNote);
-        Spinner dialogCategory = view.findViewById(R.id.dialogCategory);
-        Button dialogDateButton = view.findViewById(R.id.dialogDateButton);
-
+        // Setup category dropdown
         ExpenseCategory[] cats = ExpenseCategory.values();
-        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                Arrays.stream(cats).map(Enum::name).toArray(String[]::new)
-        );
-        catAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        dialogCategory.setAdapter(catAdapter);
+        String[] categoryNames = Arrays.stream(cats)
+                .map(c -> formatCategoryName(c.name()))
+                .toArray(String[]::new);
+        ArrayAdapter<String> catAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, categoryNames);
+        dropdownCategory.setAdapter(catAdapter);
 
+        // Setup date
         Calendar tempCal = Calendar.getInstance();
-
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String currentDate = getSelectedDateString(); 
+        SimpleDateFormat displayFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
 
         if (expenseToEdit != null) {
+            textSheetTitle.setText(R.string.edit_expense);
+            editTitle.setText(expenseToEdit.title);
+            editAmount.setText(String.valueOf(expenseToEdit.amount));
+            editNote.setText(expenseToEdit.note);
+            dropdownCategory.setText(formatCategoryName(expenseToEdit.category.name()), false);
             try {
                 tempCal.setTime(sdf.parse(expenseToEdit.date));
             } catch (Exception ignored) {}
+            buttonDelete.setVisibility(View.VISIBLE);
         } else {
+            textSheetTitle.setText(R.string.add_expense);
             try {
-                tempCal.setTime(sdf.parse(currentDate));
+                tempCal.setTime(sdf.parse(getSelectedDateString()));
             } catch (Exception ignored) {}
+            dropdownCategory.setText(categoryNames[0], false);
         }
 
-        dialogDateButton.setText(sdf.format(tempCal.getTime()));
+        buttonDate.setText(displayFormat.format(tempCal.getTime()));
 
-        dialogDateButton.setOnClickListener(v -> {
-            int y = tempCal.get(Calendar.YEAR);
-            int m = tempCal.get(Calendar.MONTH);
-            int d = tempCal.get(Calendar.DAY_OF_MONTH);
-
-            DatePickerDialog dp = new DatePickerDialog(
-                    MainActivity.this,
-                    (picker, year, month, day) -> {
+        // Date picker
+        buttonDate.setOnClickListener(v -> {
+            new DatePickerDialog(this,
+                    (view, year, month, day) -> {
                         tempCal.set(year, month, day);
-                        dialogDateButton.setText(sdf.format(tempCal.getTime()));
+                        buttonDate.setText(displayFormat.format(tempCal.getTime()));
                     },
-                    y, m, d
-            );
-            dp.show();
+                    tempCal.get(Calendar.YEAR),
+                    tempCal.get(Calendar.MONTH),
+                    tempCal.get(Calendar.DAY_OF_MONTH)
+            ).show();
         });
 
-        if (expenseToEdit != null) {
-            dialogTitle.setText(expenseToEdit.title);
-            dialogAmount.setText(String.valueOf(expenseToEdit.amount));
-            dialogNote.setText(expenseToEdit.note);
-            dialogCategory.setSelection(expenseToEdit.category.ordinal());
-        }
+        // Cancel
+        buttonCancel.setOnClickListener(v -> bottomSheet.dismiss());
 
-        builder.setPositiveButton("Save", (dialog, which) -> {
+        // Delete
+        buttonDelete.setOnClickListener(v -> {
+            new AlertDialog.Builder(this)
+                    .setTitle("Delete Expense")
+                    .setMessage("Are you sure you want to delete this expense?")
+                    .setPositiveButton("Delete", (d, w) -> {
+                        expenseDao.delete(expenseToEdit);
+                        Toast.makeText(this, R.string.expense_deleted, Toast.LENGTH_SHORT).show();
+                        bottomSheet.dismiss();
+                        loadDataForSelectedDate();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
 
-            String title = dialogTitle.getText().toString().trim();
-            String amtStr = dialogAmount.getText().toString().trim();
-            String note = dialogNote.getText().toString().trim();
+        // Save
+        buttonSave.setOnClickListener(v -> {
+            String title = editTitle.getText().toString().trim();
+            String amtStr = editAmount.getText().toString().trim();
+            String note = editNote.getText().toString().trim();
             String chosenDate = sdf.format(tempCal.getTime());
-            ExpenseCategory cat = cats[dialogCategory.getSelectedItemPosition()];
 
-            if (title.isEmpty() || amtStr.isEmpty()) {
-                Toast.makeText(this, "Title and amount required", Toast.LENGTH_SHORT).show();
+            if (title.isEmpty()) {
+                editTitle.setError(getString(R.string.error_title_required));
+                return;
+            }
+            if (amtStr.isEmpty()) {
+                editAmount.setError(getString(R.string.error_amount_required));
                 return;
             }
 
-            double amount = Double.parseDouble(amtStr);
+            double amount;
+            try {
+                amount = Double.parseDouble(amtStr);
+            } catch (NumberFormatException e) {
+                editAmount.setError(getString(R.string.error_invalid_amount));
+                return;
+            }
+
+            // Find selected category
+            String selectedCatName = dropdownCategory.getText().toString();
+            ExpenseCategory cat = cats[0];
+            for (ExpenseCategory c : cats) {
+                if (formatCategoryName(c.name()).equals(selectedCatName)) {
+                    cat = c;
+                    break;
+                }
+            }
 
             if (expenseToEdit == null) {
                 Expense e = new Expense();
@@ -264,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
                 e.note = note;
                 e.date = chosenDate;
                 expenseDao.insert(e);
-                Toast.makeText(this, "Added", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.expense_added, Toast.LENGTH_SHORT).show();
             } else {
                 expenseToEdit.title = title;
                 expenseToEdit.amount = amount;
@@ -272,31 +373,19 @@ public class MainActivity extends AppCompatActivity {
                 expenseToEdit.note = note;
                 expenseToEdit.date = chosenDate;
                 expenseDao.update(expenseToEdit);
-                Toast.makeText(this, "Updated", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.expense_updated, Toast.LENGTH_SHORT).show();
             }
 
+            bottomSheet.dismiss();
             loadDataForSelectedDate();
         });
 
-        builder.setNegativeButton("Cancel", null);
+        bottomSheet.show();
+    }
 
-        if (expenseToEdit != null) {
-            builder.setNeutralButton("Delete", (d, w) -> {
-                new AlertDialog.Builder(MainActivity.this)
-                        .setTitle("Confirm Delete")
-                        .setMessage("Are you sure you want to delete this expense?")
-                        .setPositiveButton("Delete", (dialogConfirm, whichConfirm) -> {
-                            expenseDao.delete(expenseToEdit);
-                            Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show();
-                            loadDataForSelectedDate();
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
-            });
-
-        }
-
-        builder.create().show();
+    private String formatCategoryName(String name) {
+        if (name == null || name.isEmpty()) return "";
+        return name.charAt(0) + name.substring(1).toLowerCase(Locale.getDefault());
     }
 
     private void updateBadges() {
@@ -335,18 +424,23 @@ public class MainActivity extends AppCompatActivity {
         double totalThisMonth = expenseDao.getTotalForRange(monthStart, monthEnd);
         double remaining = budget - totalThisMonth;
 
-        textMonthlyBudgetHome.setText(
-                "Monthly budget: $" + String.format(Locale.getDefault(), "%.2f", budget) +
-                        "   Remaining: $" + String.format(Locale.getDefault(), "%.2f", remaining)
-        );
+        // Update budget card
+        textMonthlyBudgetHome.setText(String.format(Locale.getDefault(), "$%.2f", budget));
+        textSpent.setText(String.format(Locale.getDefault(), "$%.2f", totalThisMonth));
+        textRemaining.setText(String.format(Locale.getDefault(), "$%.2f", Math.max(0, remaining)));
 
+        // Update progress bar
+        int progress = budget > 0 ? (int) ((totalThisMonth / budget) * 100) : 0;
+        progressBudget.setProgress(Math.min(progress, 100));
+
+        // Warning states
         if (totalThisMonth > budget) {
-            textBudgetWarningHome.setText("Above monthly budget!");
-            textBudgetWarningHome.setBackgroundColor(0xFFFF0000);
+            textBudgetWarningHome.setText(R.string.budget_exceeded);
+            textBudgetWarningHome.setBackgroundResource(R.drawable.warning_badge_background);
             textBudgetWarningHome.setVisibility(View.VISIBLE);
         } else if (remaining <= 200) {
-            textBudgetWarningHome.setText("Within $200 of monthly budget");
-            textBudgetWarningHome.setBackgroundColor(0xFFFFA500);
+            textBudgetWarningHome.setText(R.string.budget_warning);
+            textBudgetWarningHome.setBackgroundResource(R.drawable.warning_badge_background);
             textBudgetWarningHome.setVisibility(View.VISIBLE);
         } else {
             textBudgetWarningHome.setVisibility(View.GONE);
@@ -375,14 +469,10 @@ public class MainActivity extends AppCompatActivity {
             cursor.add(Calendar.DAY_OF_MONTH, 1);
         }
 
-        textBadgesThisMonth.setText(
-                "No-spend badges this month: " + badges
-        );
+        textBadgesThisMonth.setText(badges + " badges this month");
     }
 
     private void updateStreakStatus() {
-        // Base the streak on the currently selected date, so viewing the past
-        // (e.g., Oct 14) shows the streak up to that day.
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         Calendar base = Calendar.getInstance();
         try {
@@ -392,7 +482,7 @@ public class MainActivity extends AppCompatActivity {
         Calendar cursor = (Calendar) base.clone();
 
         int streak = 0;
-        int maxDaysLookback = 365; // safety cap to avoid ANRs
+        int maxDaysLookback = 365;
         while (maxDaysLookback-- > 0) {
             String dayStr = sdf.format(cursor.getTime());
             double total = expenseDao.getTotalForDay(dayStr);
@@ -405,49 +495,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (streak <= 0) {
-            textStreakStatus.setVisibility(View.GONE);
+            textStreakStatus.setText("0 day streak");
             imageStreakBadge.setVisibility(View.GONE);
             return;
         }
 
-        String badgeLabel = "";
-        int bgColor = 0xFF228B22; // default green
-
-        if (streak >= 30) {
-            badgeLabel = "Gold badge";
-            bgColor = 0xFFFFD700; // gold
-        } else if (streak >= 7) {
-            badgeLabel = "Silver badge";
-            bgColor = 0xFFC0C0C0; // silver
-        } else if (streak >= 3) {
-            badgeLabel = "Bronze badge";
-            bgColor = 0xFFCD7F32; // bronze
-        }
-
-        // Monthly badge: perfect no-spend streak for all days so far in this month
-        int daysElapsed = base.get(Calendar.DAY_OF_MONTH);
-        boolean monthlyPerfect = streak >= daysElapsed;
-
-        String text = "No-spend streak: " + streak + " days";
+        String text = streak + " day streak";
         int badgeResId = 0;
+
         if (streak >= 30) {
+            text += " (Gold)";
             badgeResId = R.drawable.gold;
         } else if (streak >= 7) {
+            text += " (Silver)";
             badgeResId = R.drawable.silver;
         } else if (streak >= 3) {
+            text += " (Bronze)";
             badgeResId = R.drawable.bronze;
         }
 
-        if (!badgeLabel.isEmpty()) {
-            text += " (" + badgeLabel + ")";
-        }
-        if (monthlyPerfect) {
-            text += " - Monthly streak!";
-        }
-
         textStreakStatus.setText(text);
-        textStreakStatus.setBackgroundColor(bgColor);
-        textStreakStatus.setVisibility(View.VISIBLE);
 
         if (badgeResId != 0) {
             imageStreakBadge.setImageResource(badgeResId);
@@ -456,6 +523,4 @@ public class MainActivity extends AppCompatActivity {
             imageStreakBadge.setVisibility(View.GONE);
         }
     }
-
 }
-

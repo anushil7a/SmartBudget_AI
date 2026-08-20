@@ -9,8 +9,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 
 
 @Database(
-        entities = {Expense.class, Budget.class},
-        version = 2,
+        entities = {Expense.class, Budget.class, MerchantCategory.class, ChatMessage.class},
+        version = 3,
         exportSchema = false
 )
 @TypeConverters({Converters.class})
@@ -21,6 +21,10 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ExpenseDao expenseDao();
 
     public abstract BudgetDao budgetDao();
+
+    public abstract MerchantCategoryDao merchantCategoryDao();
+
+    public abstract ChatMessageDao chatMessageDao();
 
     public static synchronized AppDatabase getInstance(Context context) {
         if (instance == null) {
