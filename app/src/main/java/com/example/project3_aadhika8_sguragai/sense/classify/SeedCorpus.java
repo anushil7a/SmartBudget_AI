@@ -88,9 +88,44 @@ public final class SeedCorpus {
         }
     }
 
-    /** Keyword to category. Used for seeding and for category detection in search queries. */
+    /** Keyword to category. The classifier's seed vocabulary — brand names included. */
     public static Map<String, ExpenseCategory> keywords() {
         return KEYWORDS;
+    }
+
+    /**
+     * The generic half of the vocabulary, for reading categories out of a search query.
+     *
+     * <p>Deliberately excludes brand names. "starbucks last week" should find Starbucks
+     * transactions, not every FOOD row — a brand is a merchant term, not a category filter.
+     * Same table, two uses, still no third copy.
+     */
+    private static final Map<String, ExpenseCategory> CATEGORY_WORDS = buildCategoryWords();
+
+    private static Map<String, ExpenseCategory> buildCategoryWords() {
+        Map<String, ExpenseCategory> m = new LinkedHashMap<>();
+        put(m, new String[]{"food", "restaurant", "restaurants", "dining", "eat", "eating",
+                "lunch", "dinner", "breakfast", "coffee", "cafe", "diner", "takeout",
+                "meal", "meals"}, ExpenseCategory.FOOD);
+        put(m, new String[]{"transport", "transportation", "travel", "commute", "gas",
+                "fuel", "parking", "transit"}, ExpenseCategory.TRANSPORT);
+        put(m, new String[]{"groceries", "grocery", "supermarket", "market"},
+                ExpenseCategory.GROCERIES);
+        // "show" is deliberately absent: "show me my food spending" is a far more common
+        // query shape than "show" meaning a concert, and "shows"/"concert" cover that sense.
+        put(m, new String[]{"entertainment", "movie", "movies", "streaming", "concert",
+                "concerts", "shows", "game", "games", "cinema"},
+                ExpenseCategory.ENTERTAINMENT);
+        put(m, new String[]{"shopping", "clothes", "clothing", "shoes", "electronics",
+                "furniture", "apparel"}, ExpenseCategory.SHOPPING);
+        put(m, new String[]{"bills", "bill", "utilities", "utility", "rent", "mortgage",
+                "insurance", "internet", "phone", "cable"}, ExpenseCategory.BILLS);
+        put(m, new String[]{"other", "misc", "miscellaneous"}, ExpenseCategory.OTHER);
+        return Collections.unmodifiableMap(m);
+    }
+
+    public static Map<String, ExpenseCategory> categoryWords() {
+        return CATEGORY_WORDS;
     }
 
     /** Give a fresh model a starting opinion. Runs once; see SeedCorpus usage in the repository. */

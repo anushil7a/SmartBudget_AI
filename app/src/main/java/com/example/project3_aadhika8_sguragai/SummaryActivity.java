@@ -2,6 +2,9 @@ package com.example.project3_aadhika8_sguragai;
 
 import com.example.project3_aadhika8_sguragai.data.*;
 import com.example.project3_aadhika8_sguragai.sense.OpenAIService;
+import com.example.project3_aadhika8_sguragai.sense.search.QueryParser;
+import com.example.project3_aadhika8_sguragai.sense.search.SearchFilter;
+import com.example.project3_aadhika8_sguragai.sense.search.SearchFilterSqlBuilder;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -78,7 +81,6 @@ public class SummaryActivity extends AppCompatActivity {
     private boolean isExpensesVisible = false;
 
     private BottomNavigationView bottomNavigation;
-    private NaturalLanguageParser nlParser;
     private OpenAIService openAIService;
     private TextView textSearchResult;
 
@@ -90,7 +92,6 @@ public class SummaryActivity extends AppCompatActivity {
         db = AppDatabase.getInstance(getApplicationContext());
         expenseDao = db.expenseDao();
         budgetDao = db.budgetDao();
-        nlParser = new NaturalLanguageParser();
         openAIService = new OpenAIService(BuildConfig.OPENAI_API_KEY);
 
         buttonBack = findViewById(R.id.buttonBack);
@@ -443,130 +444,41 @@ public class SummaryActivity extends AppCompatActivity {
         listExpenses.setAdapter(expensesAdapter);
     }
 
+    /**
+     * Plain-language search, run entirely on the device.
+     *
+     * <p>This used to ship the whole expense history to OpenAI and show back a paragraph.
+     * Now the query compiles to a typed SearchFilter, that compiles to parameterised SQL, and
+     * the rows come from Room. Nothing about the user's spending leaves the phone.
+     */
     private void applyNaturalLanguageSearch() {
         String queryText = editSearch.getText().toString().trim();
         if (queryText.isEmpty()) {
             loadExpensesForCurrentRange();
             return;
         }
-
-        // Check if OpenAI is available
-        if (openAIService.hasApiKey()) {
-            // Use AI-powered search
-            performAISearch(queryText);
-        } else {
-            // Fall back to local parsing
-            performLocalSearch(queryText);
-        }
-    }
-
-    private void performAISearch(String queryText) {
-        // Show loading
-        Toast.makeText(this, "Searching with AI...", Toast.LENGTH_SHORT).show();
-        buttonSearch.setEnabled(false);
-
-        // Build expense data for AI
-        String expenseData = buildExpenseDataForSearch();
-
-        openAIService.searchExpenses(queryText, expenseData, new OpenAIService.ChatCallback() {
-            @Override
-            public void onSuccess(String response) {
-                runOnUiThread(() -> {
-                    buttonSearch.setEnabled(true);
-                    
-                    // Show AI response in a dialog
-                    new android.app.AlertDialog.Builder(SummaryActivity.this)
-                            .setTitle("Search Results")
-                            .setMessage(response)
-                            .setPositiveButton("OK", null)
-                            .show();
-                });
-            }
-
-            @Override
-            public void onError(String error) {
-                runOnUiThread(() -> {
-                    buttonSearch.setEnabled(true);
-                    // Fall back to local search
-                    performLocalSearch(queryText);
-                });
-            }
-        });
-    }
-
-    private String buildExpenseDataForSearch() {
-        StringBuilder data = new StringBuilder();
-        
-        // Get all expenses
-        List<Expense> allExpenses = expenseDao.getAllExpenses();
-        
-        if (allExpenses != null && !allExpenses.isEmpty()) {
-            // Sort by date (newest first)
-            allExpenses.sort((a, b) -> b.date.compareTo(a.date));
-            
-            for (Expense e : allExpenses) {
-                String catName = e.category != null ? e.category.name() : "OTHER";
-                String note = (e.note != null && !e.note.isEmpty()) ? " [" + e.note + "]" : "";
-                data.append(String.format(Locale.getDefault(),
-                        "%s: %s - $%.2f (%s)%s\n",
-                        e.date, e.title, e.amount, catName, note));
-            }
-        }
-        
-        return data.toString();
+        performLocalSearch(queryText);
     }
 
     private void performLocalSearch(String queryText) {
-        // Parse the natural language query
-        NaturalLanguageParser.SearchQuery searchQuery = nlParser.parse(queryText);
+        SearchFilter filter = new QueryParser().parse(queryText);
 
-        // Determine date range
-        String start = searchQuery.startDate != null ? searchQuery.startDate : getFromDateString();
-        String end = searchQuery.endDate != null ? searchQuery.endDate : getToDateString();
-
-        // Get all expenses in range
-        List<Expense> allExpenses = expenseDao.getExpensesInRange(start, end);
-
-        ArrayList<String> filtered = new ArrayList<>();
-
-        for (Expense e : allExpenses) {
-            boolean matches = true;
-
-            // Category filter
-            if (searchQuery.category != null && e.category != searchQuery.category) {
-                matches = false;
-            }
-
-            // Min amount filter
-            if (searchQuery.minAmount != null && e.amount < searchQuery.minAmount) {
-                matches = false;
-            }
-
-            // Max amount filter
-            if (searchQuery.maxAmount != null && e.amount > searchQuery.maxAmount) {
-                matches = false;
-            }
-
-            // Keyword filter
-            if (searchQuery.keyword != null && !searchQuery.keyword.isEmpty()) {
-                String title = e.title == null ? "" : e.title.toLowerCase();
-                String note = e.note == null ? "" : e.note.toLowerCase();
-                if (!title.contains(searchQuery.keyword) && !note.contains(searchQuery.keyword)) {
-                    matches = false;
-                }
-            }
-
-            if (matches) {
-                String title = e.title == null ? "" : e.title;
-                String catName = e.category == null ? "" : e.category.name();
-                String line = e.date + " - " + title + " - $" +
-                        String.format(Locale.getDefault(), "%.2f", e.amount) +
-                        " (" + catName + ")";
-                filtered.add(line);
-            }
+        if (filter.isEmpty()) {
+            Toast.makeText(this, "Could not understand that query", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        // Show results
+        List<Expense> results = expenseDao.search(SearchFilterSqlBuilder.build(filter));
+
+        ArrayList<String> filtered = new ArrayList<>();
+        for (Expense e : results) {
+            String title = e.title == null ? "" : e.title;
+            String catName = e.category == null ? "" : e.category.name();
+            filtered.add(e.date + " - " + title + " - $"
+                    + String.format(Locale.getDefault(), "%.2f", e.amount)
+                    + " (" + catName + ")");
+        }
+
         if (!isExpensesVisible) {
             listExpenses.setVisibility(View.VISIBLE);
             spinnerSort.setVisibility(View.VISIBLE);
@@ -580,8 +492,12 @@ public class SummaryActivity extends AppCompatActivity {
         );
         listExpenses.setAdapter(expensesAdapter);
 
-        // Show result count
-        Toast.makeText(this, "Found " + filtered.size() + " expenses", Toast.LENGTH_SHORT).show();
+        StringBuilder chips = new StringBuilder();
+        for (SearchFilter.Chip c : filter.toChips()) {
+            if (chips.length() > 0) chips.append(" · ");
+            chips.append(c.label);
+        }
+        Toast.makeText(this, filtered.size() + " found — " + chips, Toast.LENGTH_SHORT).show();
     }
 
 

@@ -26,6 +26,13 @@ import okhttp3.Response;
  */
 public class OpenAIService {
 
+    // The prose-answer search path was removed deliberately. It sent the user's entire
+    // transaction history to OpenAI on every query and returned a paragraph that could not be
+    // filtered, corrected, or drilled into. Find mode now compiles queries to local SQL, and
+    // the only thing an LLM is asked for is a translation (see LlmFilterTranslator).
+    // sendMessage below remains for Ask mode, which does send expense context — the Search
+    // screen says so on screen.
+
     private static final String API_URL = "https://api.openai.com/v1/chat/completions";
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
@@ -35,11 +42,6 @@ public class OpenAIService {
 
     public interface ChatCallback {
         void onSuccess(String response);
-        void onError(String error);
-    }
-
-    public interface SearchCallback {
-        void onSuccess(List<String> results, String summary);
         void onError(String error);
     }
 
@@ -107,50 +109,6 @@ public class OpenAIService {
     /**
      * Performs a natural language search using AI.
      */
-    public void searchExpenses(String query, String expenseData, ChatCallback callback) {
-        if (apiKey == null || apiKey.isEmpty()) {
-            mainHandler.post(() -> callback.onError("API key not configured"));
-            return;
-        }
-
-        try {
-            JSONObject requestJson = buildSearchRequest(query, expenseData);
-            RequestBody body = RequestBody.create(requestJson.toString(), JSON);
-
-            Request request = new Request.Builder()
-                    .url(API_URL)
-                    .addHeader("Authorization", "Bearer " + apiKey)
-                    .addHeader("Content-Type", "application/json")
-                    .post(body)
-                    .build();
-
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    mainHandler.post(() -> callback.onError("Network error: " + e.getMessage()));
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful() && response.body() != null) {
-                        try {
-                            String responseBody = response.body().string();
-                            String aiResponse = parseResponse(responseBody);
-                            mainHandler.post(() -> callback.onSuccess(aiResponse));
-                        } catch (JSONException e) {
-                            mainHandler.post(() -> callback.onError("Error parsing response"));
-                        }
-                    } else {
-                        mainHandler.post(() -> callback.onError("API error: " + response.code()));
-                    }
-                }
-            });
-
-        } catch (JSONException e) {
-            mainHandler.post(() -> callback.onError("Error creating request"));
-        }
-    }
-
     private JSONObject buildChatRequest(String userMessage, String expenseContext) throws JSONException {
         JSONObject request = new JSONObject();
         request.put("model", "gpt-4o-mini");
@@ -169,29 +127,6 @@ public class OpenAIService {
         JSONObject userMsg = new JSONObject();
         userMsg.put("role", "user");
         userMsg.put("content", userMessage);
-        messages.put(userMsg);
-
-        request.put("messages", messages);
-
-        return request;
-    }
-
-    private JSONObject buildSearchRequest(String query, String expenseData) throws JSONException {
-        JSONObject request = new JSONObject();
-        request.put("model", "gpt-4o-mini");
-        request.put("max_tokens", 500);
-        request.put("temperature", 0.3);
-
-        JSONArray messages = new JSONArray();
-
-        JSONObject systemMessage = new JSONObject();
-        systemMessage.put("role", "system");
-        systemMessage.put("content", buildSearchSystemPrompt(expenseData));
-        messages.put(systemMessage);
-
-        JSONObject userMsg = new JSONObject();
-        userMsg.put("role", "user");
-        userMsg.put("content", "Search query: " + query);
         messages.put(userMsg);
 
         request.put("messages", messages);
@@ -221,20 +156,6 @@ public class OpenAIService {
                "```\n" + expenseContext + "\n```\n\n" +
                
                "Remember: You can see ALL their transactions. Use this data to give personalized, specific answers.";
-    }
-
-    private String buildSearchSystemPrompt(String expenseData) {
-        return "You are a search assistant for a budget app. Given a natural language query, find and return matching expenses.\n\n" +
-               "EXPENSE DATA:\n" + expenseData + "\n\n" +
-               "INSTRUCTIONS:\n" +
-               "1. Interpret the user's query (e.g., 'food last week', 'over $50', 'groceries in november')\n" +
-               "2. Find all matching expenses from the data\n" +
-               "3. Return results in this format:\n" +
-               "   FOUND: [number] expenses matching '[query interpretation]'\n" +
-               "   - [date]: [title] - $[amount] ([category])\n" +
-               "   - ...\n" +
-               "   TOTAL: $[sum]\n" +
-               "4. If no matches found, explain why and suggest alternatives";
     }
 
     private String parseResponse(String responseBody) throws JSONException {
