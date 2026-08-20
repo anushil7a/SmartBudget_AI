@@ -1,4 +1,4 @@
-package com.example.project3_aadhika8_sguragai;
+package com.example.project3_aadhika8_sguragai.data;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.room.Database;

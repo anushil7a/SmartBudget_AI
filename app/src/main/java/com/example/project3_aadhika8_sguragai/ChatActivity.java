@@ -1,5 +1,8 @@
 package com.example.project3_aadhika8_sguragai;
 
+import com.example.project3_aadhika8_sguragai.data.*;
+import com.example.project3_aadhika8_sguragai.sense.OpenAIService;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;

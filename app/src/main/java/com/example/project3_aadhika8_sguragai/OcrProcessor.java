@@ -1,5 +1,7 @@
 package com.example.project3_aadhika8_sguragai;
 
+import com.example.project3_aadhika8_sguragai.data.*;
+
 import android.graphics.Bitmap;
 
 import com.google.mlkit.vision.common.InputImage;

@@ -1,5 +1,8 @@
 package com.example.project3_aadhika8_sguragai;
 
+import com.example.project3_aadhika8_sguragai.data.*;
+import com.example.project3_aadhika8_sguragai.sense.OpenAIService;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;

@@ -1,4 +1,4 @@
-package com.example.project3_aadhika8_sguragai;
+package com.example.project3_aadhika8_sguragai.data;
 
 public enum ExpenseCategory {
     GROCERIES,

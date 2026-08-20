@@ -1,5 +1,7 @@
 package com.example.project3_aadhika8_sguragai;
 
+import com.example.project3_aadhika8_sguragai.data.*;
+
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;

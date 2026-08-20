@@ -1,4 +1,6 @@
-package com.example.project3_aadhika8_sguragai;
+package com.example.project3_aadhika8_sguragai.sense;
+
+import com.example.project3_aadhika8_sguragai.data.*;
 
 import android.os.Handler;
 import android.os.Looper;
