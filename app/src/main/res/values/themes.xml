@@ -50,13 +50,12 @@
     <!--
         Type. Space Grotesk for display numerals, Inter for everything else.
 
-        FONTS NOT YET BUNDLED: the two OFL families still need to be added to res/font/, which
-        is a file download awaiting approval. Until then these resolve to the platform sans
-        stack, which keeps the build green and every size, weight and spacing decision below
-        already correct; bundling the fonts is a one-line fontFamily change per style.
+        Both are OFL and bundled in res/font/ rather than pulled from downloadable fonts, so
+        the app works offline. Licences live in assets/licenses/.
     -->
     <style name="TextAppearance.GetSense.DisplayAmount" parent="TextAppearance.Material3.DisplayMedium">
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">@font/space_grotesk</item>
+        <item name="android:textFontWeight">500</item>
         <item name="android:textSize">44sp</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
         <!-- Tabular figures, so digits do not jitter while the meter animates. -->
@@ -64,13 +63,15 @@
     </style>
 
     <style name="TextAppearance.GetSense.Title" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:textFontWeight">500</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 
     <style name="TextAppearance.GetSense.Body" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:textFontWeight">400</item>
         <item name="android:textSize">15sp</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
@@ -80,7 +81,8 @@
         and every metadata row uses it.
     -->
     <style name="TextAppearance.GetSense.Label" parent="TextAppearance.Material3.LabelSmall">
-        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:textFontWeight">500</item>
         <item name="android:textSize">11sp</item>
         <item name="android:textAllCaps">true</item>
         <item name="android:letterSpacing">0.12</item>
