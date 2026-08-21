@@ -1,19 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup and device-transfer rules for API 31+.
+
+    Photographed receipts are excluded from both. They are pictures of the user's shopping,
+    frequently showing a card's last four digits and a store's location; the expense rows are
+    enough to restore the app's state without carrying the images off the device.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="file" path="receipts" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="file" path="receipts" />
     </device-transfer>
-    -->
 </data-extraction-rules>
