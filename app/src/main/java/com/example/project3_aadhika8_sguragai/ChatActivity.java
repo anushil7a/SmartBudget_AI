@@ -1,6 +1,7 @@
 package com.example.project3_aadhika8_sguragai;
 
 import com.example.project3_aadhika8_sguragai.data.*;
+import com.example.project3_aadhika8_sguragai.ui.home.HomeActivity;
 import com.example.project3_aadhika8_sguragai.sense.OpenAIService;
 
 import android.content.Intent;
@@ -100,7 +101,7 @@ public class ChatActivity extends AppCompatActivity {
         bottomNavigation.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
             if (id == R.id.nav_home) {
-                startActivity(new Intent(this, MainActivity.class));
+                startActivity(new Intent(this, HomeActivity.class));
                 finish();
                 return true;
             } else if (id == R.id.nav_charts) {

@@ -115,4 +115,16 @@
     <string name="remember_category_message">Use %s for future \"%s\" expenses?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <!-- getSense AI: Home and navigation -->
+    <string name="nav_scan">Scan</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_insights">Insights</string>
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="transactions">Transactions</string>
+    <string name="no_transactions_month">No transactions this month</string>
+    <string name="needs_review_count">Needs review · %1$d</string>
+    <string name="budget_caption">Of $%1$s budget · $%2$s left</string>
+    <string name="budget_caption_over">Of $%1$s budget · $%2$s over</string>
+    <string name="set_a_budget">Tap to set a monthly budget</string>
 </resources>
