@@ -134,6 +134,7 @@ public class PieChartFragment extends Fragment {
             
             legendItems.add(new LegendItem(
                 formatCategoryName(cat.name()),
+                cat,
                 amount,
                 CategoryPalette.color(requireContext(), cat)
             ));
@@ -173,11 +174,13 @@ public class PieChartFragment extends Fragment {
     // Legend Item class
     static class LegendItem {
         String category;
+        ExpenseCategory value;
         double amount;
         int color;
 
-        LegendItem(String category, double amount, int color) {
+        LegendItem(String category, ExpenseCategory value, double amount, int color) {
             this.category = category;
+            this.value = value;
             this.amount = amount;
             this.color = color;
         }
@@ -212,6 +215,16 @@ public class PieChartFragment extends Fragment {
             
             GradientDrawable bg = (GradientDrawable) holder.viewColor.getBackground();
             bg.setColor(item.color);
+
+            // Tapping a category drills into its transactions for the same window.
+            holder.itemView.setOnClickListener(v -> {
+                android.content.Intent intent = new android.content.Intent(
+                        requireContext(), CategoryExpensesActivity.class);
+                intent.putExtra(CategoryExpensesActivity.EXTRA_CATEGORY, item.value.name());
+                intent.putExtra(CategoryExpensesActivity.EXTRA_START_DATE, startDate);
+                intent.putExtra(CategoryExpensesActivity.EXTRA_END_DATE, endDate);
+                startActivity(intent);
+            });
         }
 
         @Override
