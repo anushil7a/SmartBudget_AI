@@ -50,6 +50,23 @@ android {
     }
 }
 
+// room-testing parses the exported schema JSON with kotlinx-serialization. A transitive BOM
+// pins serialization-core to "strictly 1.7.3" while json resolves to 1.8.1. Room 2.8.4's
+// generated bundle serializers are built against 1.8.x, where GeneratedSerializer no longer
+// declares typeParametersSerializers() abstract — running them on 1.7.3 core throws
+// AbstractMethodError inside MigrationTestHelper. Lift the whole family to 1.8.1 so the
+// serializers match the runtime they were compiled for.
+configurations.configureEach {
+    if (name.contains("AndroidTest")) {
+        resolutionStrategy {
+            force("org.jetbrains.kotlinx:kotlinx-serialization-core:1.8.1")
+            force("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.8.1")
+            force("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+            force("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.8.1")
+        }
+    }
+}
+
 dependencies {
 
     implementation(libs.appcompat)
