@@ -27,11 +27,10 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".SummaryActivity" />
         <activity android:name=".CategoryExpensesActivity" />
-        <activity android:name=".ChartsActivity" />
-        <activity android:name=".ChatActivity" />
-        <activity android:name=".ReceiptScanActivity" />
+        <activity android:name=".ui.scan.ScanActivity" />
+        <activity android:name=".ui.search.SearchActivity" />
+        <activity android:name=".ui.insights.InsightsActivity" />
         
         <!-- FileProvider for camera capture -->
         <provider

@@ -13,10 +13,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.project3_aadhika8_sguragai.ChartsActivity;
 import com.example.project3_aadhika8_sguragai.R;
-import com.example.project3_aadhika8_sguragai.ReceiptScanActivity;
-import com.example.project3_aadhika8_sguragai.SummaryActivity;
+import com.example.project3_aadhika8_sguragai.ui.insights.InsightsActivity;
+import com.example.project3_aadhika8_sguragai.ui.scan.ScanActivity;
+import com.example.project3_aadhika8_sguragai.ui.search.SearchActivity;
 import com.example.project3_aadhika8_sguragai.data.Expense;
 import com.example.project3_aadhika8_sguragai.data.ExpenseCategory;
 import com.example.project3_aadhika8_sguragai.ui.widget.BudgetMeterView;
@@ -83,7 +83,7 @@ public class HomeActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fabAdd);
         fab.setOnClickListener(v ->
-                startActivity(new Intent(this, ReceiptScanActivity.class)));
+                startActivity(new Intent(this, ScanActivity.class)));
 
         textBudgetCaption.setOnClickListener(v -> promptForBudget());
     }
@@ -122,15 +122,15 @@ public class HomeActivity extends AppCompatActivity {
                 return true;
             }
             if (id == R.id.nav_scan) {
-                startActivity(new Intent(this, ReceiptScanActivity.class));
+                startActivity(new Intent(this, ScanActivity.class));
                 return true;
             }
             if (id == R.id.nav_search) {
-                startActivity(new Intent(this, SummaryActivity.class));
+                startActivity(new Intent(this, SearchActivity.class));
                 return true;
             }
             if (id == R.id.nav_insights) {
-                startActivity(new Intent(this, ChartsActivity.class));
+                startActivity(new Intent(this, InsightsActivity.class));
                 return true;
             }
             return false;

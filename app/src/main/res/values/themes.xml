@@ -20,6 +20,17 @@
         <item name="colorSecondary">@color/sense_positive</item>
         <item name="colorOnSecondary">@color/sense_on_accent</item>
 
+        <!--
+            Left unset, Material fills these with its default purple, which then shows up as
+            the bottom-nav active pill and the selected half of a toggle group — a colour that
+            appears nowhere in this palette. Pointing them at the raised surface keeps the
+            selected state legible while the accent stays reserved for the mark itself.
+        -->
+        <item name="colorSecondaryContainer">@color/sense_surface_raised</item>
+        <item name="colorOnSecondaryContainer">@color/sense_accent</item>
+        <item name="colorTertiaryContainer">@color/sense_surface_raised</item>
+        <item name="colorOnTertiaryContainer">@color/sense_text_primary</item>
+
         <item name="android:colorBackground">@color/sense_canvas</item>
         <item name="colorOnBackground">@color/sense_text_primary</item>
 

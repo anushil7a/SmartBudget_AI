@@ -43,14 +43,10 @@ public abstract class AppDatabase extends RoomDatabase {
                             AppDatabase.class,
                             "budgetbuddy.db"
                     )
-                    // TEMPORARY — remove in Phase 6 (Task 6.2) once HomeActivity and
-                    // SummaryActivity are replaced by ViewModels reading through
-                    // ExpenseRepository. The legacy screens still call DAOs inline; this
-                    // keeps the app runnable while the sense/ engines are built out.
-                    // The spec requires this flag gone in the finished app.
-                    .allowMainThreadQueries()
-                    // No fallbackToDestructiveMigration: an upgrade must not silently
-                    // discard the user's data or the classifier's learned counts.
+                    // No allowMainThreadQueries: every read and write goes through
+                    // ExpenseRepository's executor, and each screen reads LiveData from a
+                    // ViewModel. No fallbackToDestructiveMigration: an upgrade must not
+                    // silently discard the user's data or the classifier's learned counts.
                     .addMigrations(Migrations.MIGRATION_3_4)
                     .addCallback(seedData)
                     .build();

@@ -16,6 +16,7 @@ import com.example.project3_aadhika8_sguragai.R;
 import com.example.project3_aadhika8_sguragai.data.CaptureSource;
 import com.example.project3_aadhika8_sguragai.data.Expense;
 import com.example.project3_aadhika8_sguragai.data.ExpenseCategory;
+import com.example.project3_aadhika8_sguragai.ui.CategoryPalette;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -73,23 +74,9 @@ public class ExpenseAdapter extends ListAdapter<Expense, ExpenseAdapter.VH> {
         holder.bind(getItem(position), listener);
     }
 
-    /** The category palette, as a marker colour. */
+    /** The category palette, as a marker colour. One mapping, shared with the charts. */
     static int colorFor(View view, ExpenseCategory category) {
-        int res;
-        if (category == null) {
-            res = R.color.category_other;
-        } else {
-            switch (category) {
-                case FOOD: res = R.color.category_food; break;
-                case TRANSPORT: res = R.color.category_transport; break;
-                case ENTERTAINMENT: res = R.color.category_entertainment; break;
-                case GROCERIES: res = R.color.category_groceries; break;
-                case BILLS: res = R.color.category_bills; break;
-                case SHOPPING: res = R.color.category_shopping; break;
-                default: res = R.color.category_other; break;
-            }
-        }
-        return ContextCompat.getColor(view.getContext(), res);
+        return CategoryPalette.color(view.getContext(), category);
     }
 
     static class VH extends RecyclerView.ViewHolder {

@@ -1,6 +1,8 @@
 package com.example.project3_aadhika8_sguragai;
 
 import com.example.project3_aadhika8_sguragai.data.*;
+import com.example.project3_aadhika8_sguragai.ui.CategoryPalette;
+import com.example.project3_aadhika8_sguragai.ui.insights.DateRangeHost;
 
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -57,8 +59,8 @@ public class PieChartFragment extends Fragment {
         setupPieChart();
 
         // Get initial dates from parent activity
-        if (getActivity() instanceof ChartsActivity) {
-            ChartsActivity parent = (ChartsActivity) getActivity();
+        if (getActivity() instanceof DateRangeHost) {
+            DateRangeHost parent = (DateRangeHost) getActivity();
             startDate = parent.getStartDate();
             endDate = parent.getEndDate();
             if (startDate != null && endDate != null) {
@@ -90,37 +92,50 @@ public class PieChartFragment extends Fragment {
         }
     }
 
+    /**
+     * Aggregate on the repository's background thread, then draw. Room no longer allows
+     * main-thread reads, and one query per category is exactly the sort of loop that used to
+     * block the UI.
+     */
     private void loadData() {
+        final String start = startDate;
+        final String end = endDate;
+        final ExpenseCategory[] cats = ExpenseCategory.values();
+
+        ExpenseRepository.get(requireContext()).query(() -> {
+            double[] out = new double[cats.length];
+            for (int i = 0; i < cats.length; i++) {
+                out[i] = expenseDao.getTotalByCategory(cats[i], start, end);
+            }
+            return out;
+        }, totals -> {
+            if (totals != null && isAdded()) {
+                render(totals);
+            }
+        });
+    }
+
+    private void render(double[] totals) {
         List<PieEntry> entries = new ArrayList<>();
         List<Integer> colors = new ArrayList<>();
         List<LegendItem> legendItems = new ArrayList<>();
         double total = 0;
 
-        int[] categoryColors = {
-            requireContext().getColor(R.color.category_food),
-            requireContext().getColor(R.color.category_transport),
-            requireContext().getColor(R.color.category_entertainment),
-            requireContext().getColor(R.color.category_groceries),
-            requireContext().getColor(R.color.category_bills),
-            requireContext().getColor(R.color.category_shopping),
-            requireContext().getColor(R.color.category_other)
-        };
-
         ExpenseCategory[] categories = ExpenseCategory.values();
         for (int i = 0; i < categories.length; i++) {
             ExpenseCategory cat = categories[i];
-            double amount = expenseDao.getTotalByCategory(cat, startDate, endDate);
+            double amount = totals[i];
             
             if (amount > 0) {
                 entries.add(new PieEntry((float) amount, formatCategoryName(cat.name())));
-                colors.add(categoryColors[i]);
+                colors.add(CategoryPalette.color(requireContext(), cat));
                 total += amount;
             }
             
             legendItems.add(new LegendItem(
                 formatCategoryName(cat.name()),
                 amount,
-                categoryColors[i]
+                CategoryPalette.color(requireContext(), cat)
             ));
         }
 

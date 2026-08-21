@@ -94,8 +94,12 @@ public class CategoryExpensesActivity extends AppCompatActivity {
     }
 
     private void loadCategoryExpenses(ExpenseCategory cat, String start, String end) {
-        catExpenses = expenseDao.getExpensesByCategory(cat, start, end);
-        applySortAndDisplay();
+        ExpenseRepository.get(this).query(
+                () -> expenseDao.getExpensesByCategory(cat, start, end),
+                rows -> {
+                    catExpenses = rows;
+                    applySortAndDisplay();
+                });
     }
 
     private void applySortAndDisplay() {

@@ -1,6 +1,7 @@
 package com.example.project3_aadhika8_sguragai;
 
 import com.example.project3_aadhika8_sguragai.data.*;
+import com.example.project3_aadhika8_sguragai.ui.insights.DateRangeHost;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -57,8 +58,8 @@ public class TrendChartFragment extends Fragment {
 
         setupLineChart();
 
-        if (getActivity() instanceof ChartsActivity) {
-            ChartsActivity parent = (ChartsActivity) getActivity();
+        if (getActivity() instanceof DateRangeHost) {
+            DateRangeHost parent = (DateRangeHost) getActivity();
             startDate = parent.getStartDate();
             endDate = parent.getEndDate();
             if (startDate != null && endDate != null) {
@@ -100,7 +101,34 @@ public class TrendChartFragment extends Fragment {
         }
     }
 
+    /**
+     * One range query aggregated in memory, on the repository's background thread.
+     *
+     * <p>This used to issue one getTotalForDay per day in the range, on the main thread — an
+     * N+1 that got slower the wider the window. Room now forbids the main-thread part; the
+     * N+1 was worth fixing at the same time.
+     */
     private void loadData() {
+        final String start = startDate;
+        final String end = endDate;
+
+        ExpenseRepository.get(requireContext()).query(() -> {
+            java.util.Map<String, Double> byDay = new java.util.HashMap<>();
+            java.util.List<Expense> rows = expenseDao.getExpensesInRange(start, end);
+            if (rows != null) {
+                for (Expense e : rows) {
+                    byDay.merge(e.date, e.amount, Double::sum);
+                }
+            }
+            return byDay;
+        }, byDay -> {
+            if (byDay != null && isAdded()) {
+                render(byDay);
+            }
+        });
+    }
+
+    private void render(java.util.Map<String, Double> byDay) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         SimpleDateFormat labelFormat = new SimpleDateFormat("MM/dd", Locale.getDefault());
 
@@ -122,7 +150,7 @@ public class TrendChartFragment extends Fragment {
             int index = 0;
             while (!cal.getTime().after(end)) {
                 String dayStr = sdf.format(cal.getTime());
-                double dayTotal = expenseDao.getTotalForDay(dayStr);
+                double dayTotal = byDay.getOrDefault(dayStr, 0d);
 
                 cumulativeTotal += dayTotal;
                 dailyTotals.add(dayTotal);

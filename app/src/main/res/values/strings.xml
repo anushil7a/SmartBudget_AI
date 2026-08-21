@@ -127,4 +127,31 @@
     <string name="budget_caption">Of $%1$s budget · $%2$s left</string>
     <string name="budget_caption_over">Of $%1$s budget · $%2$s over</string>
     <string name="set_a_budget">Tap to set a monthly budget</string>
+
+    <!-- getSense AI: Scan, Search, Insights -->
+    <string name="scan_placeholder">Photograph a receipt or pick one</string>
+    <string name="choose_image">Gallery</string>
+    <string name="review">Review</string>
+    <string name="amount">Amount</string>
+    <string name="note">Note</string>
+    <string name="save_expense">Save expense</string>
+    <string name="merchant_required">Enter a merchant</string>
+    <string name="amount_required">Enter an amount</string>
+    <string name="expense_saved">Saved</string>
+    <string name="camera_permission_required">Camera permission required</string>
+    <string name="error_image_file">Could not create the image file</string>
+    <string name="error_loading_image">Could not load that image</string>
+    <string name="read_with_confidence">Read with %1$d%% confidence</string>
+    <string name="not_found_check_this">Not found — please check</string>
+    <string name="from_line">From “%1$s”</string>
+    <string name="category_with_confidence">%1$s · %2$d%%</string>
+    <string name="because_of">Because of: %1$s</string>
+    <string name="mode_find">Find</string>
+    <string name="mode_ask">Ask</string>
+    <string name="privacy_find">Find runs on this device. Nothing is sent.</string>
+    <string name="privacy_ask">Ask sends your expenses to OpenAI.</string>
+    <string name="no_api_key">No OpenAI key configured. Add OPENAI_API_KEY to local.properties to use Ask.</string>
+    <string name="tab_categories">Categories</string>
+    <string name="tab_monthly">Monthly</string>
+    <string name="tab_trend">Trend</string>
 </resources>
