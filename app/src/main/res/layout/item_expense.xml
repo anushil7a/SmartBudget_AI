@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A transaction row. No card: sections are separated by a 1dp hairline rule, which is what
+    replaces card chrome throughout the app.
+
+    The metadata line is the point of the redesign — CATEGORY · scanned|typed · NN% says where
+    the row came from and how sure the classifier was, so a wrong guess is visible rather than
+    silently accepted.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="14dp">
+
+        <!-- 2dp category marker; the palette is used as a bar, not as text here. -->
+        <View
+            android:id="@+id/viewCategoryMarker"
+            android:layout_width="2dp"
+            android:layout_height="34dp"
+            android:layout_marginEnd="14dp"
+            android:background="@color/category_other" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textMerchant"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textAppearance="@style/TextAppearance.GetSense.Body"
+                tools:text="Trader Joe's" />
+
+            <TextView
+                android:id="@+id/textMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textAppearance="@style/TextAppearance.GetSense.Label"
+                tools:text="GROCERIES · SCANNED · 94%" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:fontFeatureSettings="tnum"
+            android:textAppearance="@style/TextAppearance.GetSense.Body"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="$23.41" />
+    </LinearLayout>
+
+    <View style="@style/Widget.GetSense.Hairline" />
+</LinearLayout>

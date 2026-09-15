@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Custom theme attributes for roles Material 3 has no standard slot for.
+
+    Everything else uses a standard attribute (colorPrimary, colorError, colorSurface…) so
+    stock widgets pick it up without per-view tinting. Layouts reference these attributes;
+    raw hex in layout XML is what let the previous design drift, and is disallowed.
+-->
+<resources>
+    <attr name="senseHairline" format="color" />
+    <attr name="senseTextTertiary" format="color" />
+    <attr name="sensePositive" format="color" />
+</resources>
